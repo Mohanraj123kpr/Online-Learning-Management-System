@@ -2,18 +2,45 @@
 import { RouterView } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
-import { useTheme } from '@/composables/useTheme'
+import { useTheme as useVuetifyTheme } from 'vuetify'
+import { useUserStore } from '@/stores/user'
+import { watch, onMounted } from 'vue'
 
-// Initialize theme - this will apply immediately
-useTheme()
+const userStore = useUserStore()
+const vuetifyTheme = useVuetifyTheme()
+
+// Sync user theme preference with Vuetify theme
+function syncTheme() {
+  const theme = userStore.currentUser.preferences.theme
+  const effectiveTheme =
+    theme === 'system'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light'
+      : theme
+  vuetifyTheme.global.name.value = effectiveTheme
+}
+
+onMounted(() => {
+  syncTheme()
+
+  // Watch for system theme changes
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  mediaQuery.addEventListener('change', syncTheme)
+})
+
+watch(
+  () => userStore.currentUser.preferences.theme,
+  () => syncTheme(),
+)
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <v-app>
     <AppHeader />
-    <main class="container mx-auto px-4 py-8">
+    <v-main>
       <RouterView />
-    </main>
+    </v-main>
     <ToastContainer />
-  </div>
+  </v-app>
 </template>

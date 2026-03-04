@@ -1,20 +1,16 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Award, Download, Eye } from 'lucide-vue-next'
+import { ref } from 'vue'
 import { useCoursesStore } from '@/stores/courses'
 import CertificateModal from '@/components/CertificateModal.vue'
 import type { Certificate } from '@/types'
 
 const coursesStore = useCoursesStore()
-
 const selectedCertificate = ref<Certificate | null>(null)
-const showModal = ref(false)
+const showCertificateModal = ref(false)
 
-const certificates = computed(() => coursesStore.certificates)
-
-function viewCertificate(cert: Certificate) {
-  selectedCertificate.value = cert
-  showModal.value = true
+function handleViewCertificate(certificate: Certificate) {
+  selectedCertificate.value = certificate
+  showCertificateModal.value = true
 }
 
 function formatDate(date: Date): string {
@@ -27,84 +23,90 @@ function formatDate(date: Date): string {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 p-6">
-    <div class="mx-auto max-w-6xl">
-      <!-- Header -->
-      <div class="mb-8">
-        <h1 class="mb-2 text-3xl font-bold">My Certificates</h1>
-        <p class="text-gray-600">View and download your course completion certificates</p>
-      </div>
+  <v-container fluid>
+    <!-- Header -->
+    <v-row class="mb-6">
+      <v-col>
+        <h1 class="text-h3 font-weight-bold mb-2">My Certificates</h1>
+        <p class="text-body-1 text-medium-emphasis">
+          View and download your course completion certificates
+        </p>
+      </v-col>
+    </v-row>
 
-      <!-- Empty State -->
-      <div
-        v-if="certificates.length === 0"
-        class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed bg-white py-16"
+    <!-- Certificates Grid -->
+    <v-row v-if="coursesStore.certificates.length > 0">
+      <v-col
+        v-for="certificate in coursesStore.certificates"
+        :key="certificate.id"
+        cols="12"
+        sm="6"
+        md="4"
       >
-        <Award class="mb-4 size-16 text-gray-400" />
-        <h3 class="mb-2 text-xl font-semibold">No Certificates Yet</h3>
-        <p class="text-gray-600">Complete courses to earn certificates</p>
-      </div>
-
-      <!-- Certificates Grid -->
-      <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div
-          v-for="cert in certificates"
-          :key="cert.id"
-          class="group overflow-hidden rounded-lg border bg-white shadow-sm transition-shadow hover:shadow-lg"
-        >
-          <!-- Certificate Preview -->
-          <div
-            class="relative flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-blue-50 to-white p-6"
-          >
-            <div class="text-center">
-              <Award class="mx-auto mb-3 size-12 text-blue-600" />
-              <h3 class="mb-1 text-lg font-semibold">{{ cert.courseName }}</h3>
-              <p class="text-sm text-gray-600">Certificate of Completion</p>
-            </div>
-
-            <!-- Hover Overlay -->
-            <div
-              class="absolute inset-0 flex items-center justify-center gap-3 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
-            >
-              <button
-                @click="viewCertificate(cert)"
-                class="flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100"
-              >
-                <Eye class="size-4" />
-                View
-              </button>
-            </div>
+        <v-card hover @click="handleViewCertificate(certificate)">
+          <div class="certificate-preview pa-6">
+            <v-icon size="64" color="warning" class="mb-4">mdi-certificate</v-icon>
+            <h3 class="text-h6 font-weight-bold mb-2">{{ certificate.courseName }}</h3>
+            <p class="text-body-2 text-medium-emphasis mb-2">
+              Completed on {{ formatDate(certificate.completionDate) }}
+            </p>
+            <p class="text-body-2">
+              <v-icon size="small" class="mr-1">mdi-account</v-icon>
+              {{ certificate.instructor }}
+            </p>
           </div>
 
-          <!-- Certificate Info -->
-          <div class="p-4">
-            <div class="mb-3 space-y-1">
-              <p class="text-sm text-gray-600">
-                <span class="font-medium">Instructor:</span> {{ cert.instructor }}
-              </p>
-              <p class="text-sm text-gray-600">
-                <span class="font-medium">Completed:</span> {{ formatDate(cert.completionDate) }}
-              </p>
-            </div>
+          <v-divider />
 
-            <button
-              @click="viewCertificate(cert)"
-              class="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+          <v-card-actions>
+            <v-btn
+              variant="text"
+              color="primary"
+              prepend-icon="mdi-eye"
+              @click.stop="handleViewCertificate(certificate)"
             >
-              <Download class="mr-2 inline size-4" />
-              Download
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+              View
+            </v-btn>
+            <v-btn variant="text" color="primary" prepend-icon="mdi-download"> Download </v-btn>
+            <v-btn variant="text" color="primary" prepend-icon="mdi-share-variant"> Share </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Empty State -->
+    <v-row v-else>
+      <v-col cols="12">
+        <v-card class="text-center pa-12">
+          <v-icon size="80" color="grey-lighten-1" class="mb-4">mdi-certificate-outline</v-icon>
+          <h3 class="text-h5 mb-2">No certificates yet</h3>
+          <p class="text-body-1 text-medium-emphasis mb-4">
+            Complete a course to earn your first certificate
+          </p>
+          <v-btn color="primary" to="/my-learning">View My Courses</v-btn>
+        </v-card>
+      </v-col>
+    </v-row>
 
     <!-- Certificate Modal -->
     <CertificateModal
       v-if="selectedCertificate"
+      :show="showCertificateModal"
       :certificate="selectedCertificate"
-      :is-open="showModal"
-      @close="showModal = false"
+      @close="showCertificateModal = false"
     />
-  </div>
+  </v-container>
 </template>
+
+<style scoped>
+.certificate-preview {
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+</style>

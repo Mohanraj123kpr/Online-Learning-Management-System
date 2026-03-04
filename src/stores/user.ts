@@ -98,7 +98,10 @@ export const useUserStore = defineStore('user', () => {
   function updateLearningGoal(goalId: string, updates: Partial<LearningGoal>) {
     const index = learningGoals.value.findIndex((g) => g.id === goalId)
     if (index !== -1) {
-      learningGoals.value[index] = { ...learningGoals.value[index], ...updates }
+      learningGoals.value[index] = {
+        ...learningGoals.value[index],
+        ...updates,
+      } as LearningGoal
     }
   }
 

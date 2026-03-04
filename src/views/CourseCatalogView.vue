@@ -1,100 +1,146 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { mockCourses } from '@/data/mockData'
-import CourseCard from '@/components/CourseCard.vue'
-import { Search } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { useCoursesStore } from '@/stores/courses'
+import VCourseCard from '@/components/ui/VCourseCard.vue'
+
+const router = useRouter()
+const coursesStore = useCoursesStore()
 
 const searchQuery = ref('')
-const categoryFilter = ref('all')
-const levelFilter = ref('all')
+const selectedCategory = ref('All')
+const selectedLevel = ref('All')
 
-const categories = computed(() => [
-  'all',
-  ...Array.from(new Set(mockCourses.map((c) => c.category))),
-])
-const levels = ['all', 'Beginner', 'Intermediate', 'Advanced']
+const categories = computed(() => ['All', ...new Set(coursesStore.courses.map((c) => c.category))])
+const levels = ['All', 'Beginner', 'Intermediate', 'Advanced']
 
 const filteredCourses = computed(() => {
-  return mockCourses.filter((course) => {
+  return coursesStore.courses.filter((course) => {
     const matchesSearch =
+      searchQuery.value === '' ||
       course.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+
     const matchesCategory =
-      categoryFilter.value === 'all' || course.category === categoryFilter.value
-    const matchesLevel = levelFilter.value === 'all' || course.level === levelFilter.value
+      selectedCategory.value === 'All' || course.category === selectedCategory.value
+
+    const matchesLevel = selectedLevel.value === 'All' || course.level === selectedLevel.value
 
     return matchesSearch && matchesCategory && matchesLevel
   })
 })
 
-const clearFilters = () => {
-  searchQuery.value = ''
-  categoryFilter.value = 'all'
-  levelFilter.value = 'all'
+function handleCourseClick(courseId: string) {
+  router.push(`/course/${courseId}`)
+}
+
+function handleEnroll(courseId: string) {
+  coursesStore.enrollInCourse(courseId)
 }
 </script>
 
 <template>
-  <div class="space-y-8">
+  <v-container fluid>
     <!-- Header -->
-    <div>
-      <h1 class="text-3xl font-bold">Browse Courses</h1>
-      <p class="text-gray-600">Explore our wide range of courses</p>
-    </div>
+    <v-row class="mb-6">
+      <v-col>
+        <h1 class="text-h3 font-weight-bold mb-2">Course Catalog</h1>
+        <p class="text-body-1 text-medium-emphasis">
+          Explore our wide range of courses and start learning today
+        </p>
+      </v-col>
+    </v-row>
 
     <!-- Filters -->
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div class="relative flex-1 lg:max-w-md">
-        <Search class="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-gray-400" />
-        <input
-          v-model="searchQuery"
-          type="search"
-          placeholder="Search courses..."
-          class="w-full rounded-md border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-      </div>
+    <v-row class="mb-6">
+      <v-col cols="12">
+        <v-card>
+          <v-card-text>
+            <v-row>
+              <!-- Search -->
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="searchQuery"
+                  label="Search courses"
+                  prepend-inner-icon="mdi-magnify"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details
+                  clearable
+                />
+              </v-col>
 
-      <div class="flex gap-4">
-        <select
-          v-model="categoryFilter"
-          class="w-40 rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          <option v-for="category in categories" :key="category" :value="category">
-            {{ category === 'all' ? 'All Categories' : category }}
-          </option>
-        </select>
+              <!-- Category Filter -->
+              <v-col cols="12" sm="6" md="3">
+                <v-select
+                  v-model="selectedCategory"
+                  :items="categories"
+                  label="Category"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details
+                />
+              </v-col>
 
-        <select
-          v-model="levelFilter"
-          class="w-40 rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          <option v-for="level in levels" :key="level" :value="level">
-            {{ level === 'all' ? 'All Levels' : level }}
-          </option>
-        </select>
-      </div>
-    </div>
+              <!-- Level Filter -->
+              <v-col cols="12" sm="6" md="3">
+                <v-select
+                  v-model="selectedLevel"
+                  :items="levels"
+                  label="Level"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details
+                />
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
 
     <!-- Results Count -->
-    <div class="text-gray-600">
-      {{ filteredCourses.length }} {{ filteredCourses.length === 1 ? 'course' : 'courses' }} found
-    </div>
+    <v-row>
+      <v-col>
+        <p class="text-body-2 text-medium-emphasis mb-4">
+          Showing {{ filteredCourses.length }} course{{ filteredCourses.length !== 1 ? 's' : '' }}
+        </p>
+      </v-col>
+    </v-row>
 
-    <!-- Course Grid -->
-    <div v-if="filteredCourses.length > 0" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      <CourseCard v-for="course in filteredCourses" :key="course.id" :course="course" />
-    </div>
+    <!-- Courses Grid -->
+    <v-row>
+      <v-col v-for="course in filteredCourses" :key="course.id" cols="12" sm="6" md="4" lg="3">
+        <VCourseCard
+          :course="course"
+          :enrolled="course.enrolled"
+          @click="handleCourseClick(course.id)"
+          @enroll="handleEnroll(course.id)"
+        />
+      </v-col>
+    </v-row>
 
-    <!-- No Results -->
-    <div v-else class="flex flex-col items-center justify-center py-16">
-      <p class="text-lg text-gray-600">No courses found</p>
-      <p class="text-sm text-gray-500">Try adjusting your filters</p>
-      <button
-        class="mt-4 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        @click="clearFilters"
-      >
-        Clear Filters
-      </button>
-    </div>
-  </div>
+    <!-- Empty State -->
+    <v-row v-if="filteredCourses.length === 0">
+      <v-col cols="12">
+        <v-card class="text-center pa-12">
+          <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-magnify</v-icon>
+          <h3 class="text-h5 mb-2">No courses found</h3>
+          <p class="text-body-1 text-medium-emphasis mb-4">Try adjusting your search or filters</p>
+          <v-btn
+            color="primary"
+            @click="
+              () => {
+                searchQuery = ''
+                selectedCategory = 'All'
+                selectedLevel = 'All'
+              }
+            "
+          >
+            Clear Filters
+          </v-btn>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>

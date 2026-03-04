@@ -1,145 +1,119 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { mockCourses } from '@/data/mockData'
-import CourseCard from '@/components/CourseCard.vue'
+import { useRouter } from 'vue-router'
+import { useCoursesStore } from '@/stores/courses'
+import VCourseCard from '@/components/ui/VCourseCard.vue'
 
-const activeTab = ref('all')
+const router = useRouter()
+const coursesStore = useCoursesStore()
 
-const enrolledCourses = computed(() => mockCourses.filter((c) => c.enrolled))
-const completedCourses = computed(() => enrolledCourses.value.filter((c) => c.progress === 100))
+const activeTab = ref('in-progress')
+
 const inProgressCourses = computed(() =>
-  enrolledCourses.value.filter((c) => c.progress && c.progress < 100),
+  coursesStore.enrolledCourses.filter((c) => (c.progress || 0) < 100),
 )
 
-const overallProgress = computed(() => {
-  if (enrolledCourses.value.length === 0) return 0
-  return Math.round(
-    enrolledCourses.value.reduce((sum, c) => sum + (c.progress || 0), 0) /
-      enrolledCourses.value.length,
-  )
-})
+const completedCourses = computed(() => coursesStore.completedCourses)
+
+function handleCourseClick(courseId: string) {
+  router.push(`/course/${courseId}`)
+}
+
+function handleContinue(courseId: string) {
+  const course = coursesStore.getCourseById(courseId)
+  if (course?.currentLesson) {
+    router.push(`/course/${courseId}/lesson/${course.currentLesson}`)
+  } else {
+    router.push(`/course/${courseId}`)
+  }
+}
 </script>
 
 <template>
-  <div class="space-y-8">
+  <v-container fluid>
     <!-- Header -->
-    <div>
-      <h1 class="text-3xl font-bold">My Learning</h1>
-      <p class="text-gray-600">Track your progress and continue learning</p>
-    </div>
+    <v-row class="mb-6">
+      <v-col>
+        <h1 class="text-h3 font-weight-bold mb-2">My Learning</h1>
+        <p class="text-body-1 text-medium-emphasis">Track your progress and continue learning</p>
+      </v-col>
+    </v-row>
 
-    <!-- Overall Progress -->
-    <div v-if="enrolledCourses.length > 0" class="rounded-lg border bg-white p-6 shadow-sm">
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-lg font-semibold">Overall Progress</h3>
-            <p class="text-sm text-gray-600">
-              {{ enrolledCourses.length }}
-              {{ enrolledCourses.length === 1 ? 'course' : 'courses' }} enrolled
-            </p>
-          </div>
-          <div class="text-right">
-            <p class="text-2xl font-bold">{{ overallProgress }}%</p>
-            <p class="text-sm text-gray-600">Complete</p>
-          </div>
-        </div>
-        <div class="h-3 w-full overflow-hidden rounded-full bg-gray-200">
-          <div
-            class="h-full bg-blue-600 transition-all"
-            :style="{ width: `${overallProgress}%` }"
-          ></div>
-        </div>
-      </div>
-    </div>
+    <!-- Tabs -->
+    <v-row>
+      <v-col cols="12">
+        <v-tabs v-model="activeTab" color="primary">
+          <v-tab value="in-progress">
+            In Progress
+            <v-chip size="small" class="ml-2">{{ inProgressCourses.length }}</v-chip>
+          </v-tab>
+          <v-tab value="completed">
+            Completed
+            <v-chip size="small" class="ml-2">{{ completedCourses.length }}</v-chip>
+          </v-tab>
+        </v-tabs>
+      </v-col>
+    </v-row>
 
-    <!-- Course Tabs -->
-    <div class="w-full">
-      <!-- Tab List -->
-      <div class="border-b border-gray-200">
-        <div class="flex gap-8">
-          <button
-            :class="[
-              'border-b-2 px-1 py-4 text-sm font-medium transition-colors',
-              activeTab === 'all'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-            ]"
-            @click="activeTab = 'all'"
-          >
-            All Courses ({{ enrolledCourses.length }})
-          </button>
-          <button
-            :class="[
-              'border-b-2 px-1 py-4 text-sm font-medium transition-colors',
-              activeTab === 'in-progress'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-            ]"
-            @click="activeTab = 'in-progress'"
-          >
-            In Progress ({{ inProgressCourses.length }})
-          </button>
-          <button
-            :class="[
-              'border-b-2 px-1 py-4 text-sm font-medium transition-colors',
-              activeTab === 'completed'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-            ]"
-            @click="activeTab = 'completed'"
-          >
-            Completed ({{ completedCourses.length }})
-          </button>
-        </div>
-      </div>
-
-      <!-- Tab Content: All Courses -->
-      <div v-if="activeTab === 'all'" class="mt-6">
-        <div v-if="enrolledCourses.length > 0" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <CourseCard
-            v-for="course in enrolledCourses"
-            :key="course.id"
-            :course="course"
-            :show-progress="true"
-          />
-        </div>
-        <div v-else class="flex flex-col items-center justify-center py-16">
-          <p class="text-lg text-gray-600">No enrolled courses yet</p>
-          <p class="text-sm text-gray-500">Start learning by browsing our catalog</p>
-        </div>
-      </div>
-
-      <!-- Tab Content: In Progress -->
-      <div v-if="activeTab === 'in-progress'" class="mt-6">
-        <div v-if="inProgressCourses.length > 0" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <CourseCard
+    <!-- Tab Content -->
+    <v-window v-model="activeTab">
+      <!-- In Progress -->
+      <v-window-item value="in-progress">
+        <v-row class="mt-4">
+          <v-col
             v-for="course in inProgressCourses"
             :key="course.id"
-            :course="course"
-            :show-progress="true"
-          />
-        </div>
-        <div v-else class="flex flex-col items-center justify-center py-16">
-          <p class="text-lg text-gray-600">No courses in progress</p>
-        </div>
-      </div>
+            cols="12"
+            sm="6"
+            md="4"
+            lg="3"
+          >
+            <VCourseCard
+              :course="course"
+              :enrolled="true"
+              @click="handleCourseClick(course.id)"
+              @continue="handleContinue(course.id)"
+            />
+          </v-col>
+        </v-row>
 
-      <!-- Tab Content: Completed -->
-      <div v-if="activeTab === 'completed'" class="mt-6">
-        <div v-if="completedCourses.length > 0" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <CourseCard
-            v-for="course in completedCourses"
-            :key="course.id"
-            :course="course"
-            :show-progress="true"
-          />
-        </div>
-        <div v-else class="flex flex-col items-center justify-center py-16">
-          <p class="text-lg text-gray-600">No completed courses yet</p>
-          <p class="text-sm text-gray-500">Keep learning to earn certificates</p>
-        </div>
-      </div>
-    </div>
-  </div>
+        <!-- Empty State -->
+        <v-row v-if="inProgressCourses.length === 0">
+          <v-col cols="12">
+            <v-card class="text-center pa-12">
+              <v-icon size="64" color="grey-lighten-1" class="mb-4"> mdi-book-open-variant </v-icon>
+              <h3 class="text-h5 mb-2">No courses in progress</h3>
+              <p class="text-body-1 text-medium-emphasis mb-4">
+                Start learning by enrolling in a course
+              </p>
+              <v-btn color="primary" to="/catalog">Browse Courses</v-btn>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-window-item>
+
+      <!-- Completed -->
+      <v-window-item value="completed">
+        <v-row class="mt-4">
+          <v-col v-for="course in completedCourses" :key="course.id" cols="12" sm="6" md="4" lg="3">
+            <VCourseCard :course="course" :enrolled="true" @click="handleCourseClick(course.id)" />
+          </v-col>
+        </v-row>
+
+        <!-- Empty State -->
+        <v-row v-if="completedCourses.length === 0">
+          <v-col cols="12">
+            <v-card class="text-center pa-12">
+              <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-certificate</v-icon>
+              <h3 class="text-h5 mb-2">No completed courses yet</h3>
+              <p class="text-body-1 text-medium-emphasis mb-4">
+                Complete your first course to earn a certificate
+              </p>
+              <v-btn color="primary" to="/my-learning">View In Progress</v-btn>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-window-item>
+    </v-window>
+  </v-container>
 </template>

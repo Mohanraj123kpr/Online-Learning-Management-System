@@ -5,7 +5,6 @@ import { useCoursesStore } from '@/stores/courses'
 import { useToast } from '@/composables/useToast'
 import LessonList from '@/components/LessonList.vue'
 import ReviewSection from '@/components/ReviewSection.vue'
-import { Clock, Users, Star, BookOpen, Award, ChevronLeft, Play } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,7 +12,6 @@ const coursesStore = useCoursesStore()
 const { success } = useToast()
 
 const courseId = route.params.id as string
-
 const course = computed(() => coursesStore.getCourseById(courseId))
 
 const totalLessons = computed(() => {
@@ -36,8 +34,6 @@ const firstIncompleteLesson = computed(() => {
     .find((l: any) => !l.completed)
 })
 
-const activeTab = computed(() => 'curriculum')
-
 function handleAddReview(rating: number, comment: string) {
   if (course.value) {
     coursesStore.addReview(course.value.id, rating, comment)
@@ -51,213 +47,239 @@ function handleMarkHelpful(reviewId: string) {
   }
 }
 
-function handleEnrollSafely() {
-  const currentCourse = course.value
-  if (!currentCourse) return
+function handleEnroll() {
+  if (!course.value) return
+  coursesStore.enrollInCourse(course.value.id)
+  success(`Successfully enrolled in ${course.value.title}! 🎓`)
 
-  coursesStore.enrollInCourse(currentCourse.id)
-  success(`Successfully enrolled in ${currentCourse.title}! 🎓`)
-
-  // Navigate to first lesson after a short delay
   setTimeout(() => {
-    const firstModule = currentCourse.modules[0]
-    if (firstModule && firstModule.lessons.length > 0) {
-      const firstLesson = firstModule.lessons[0]
-      if (firstLesson) {
-        router.push(`/course/${currentCourse.id}/lesson/${firstLesson.id}`)
-      }
+    if (course.value?.modules[0]?.lessons[0]) {
+      router.push(`/course/${course.value.id}/lesson/${course.value.modules[0].lessons[0].id}`)
     }
   }, 1000)
 }
 </script>
 
 <template>
-  <div v-if="!course" class="flex min-h-[400px] items-center justify-center">
-    <div class="text-center">
-      <h2 class="text-2xl font-bold">Course not found</h2>
-      <RouterLink to="/catalog">
-        <button class="mt-4 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-          Browse Courses
-        </button>
-      </RouterLink>
-    </div>
-  </div>
+  <v-container fluid>
+    <!-- Not Found -->
+    <v-row v-if="!course">
+      <v-col cols="12">
+        <v-card class="text-center pa-12">
+          <h2 class="text-h4 mb-4">Course not found</h2>
+          <v-btn color="primary" to="/catalog">Browse Courses</v-btn>
+        </v-card>
+      </v-col>
+    </v-row>
 
-  <div v-else class="space-y-8">
-    <!-- Back Button -->
-    <RouterLink to="/catalog">
-      <button class="flex items-center gap-2 rounded-md px-4 py-2 text-gray-700 hover:bg-gray-100">
-        <ChevronLeft class="size-4" />
+    <!-- Course Content -->
+    <div v-else>
+      <!-- Back Button -->
+      <v-btn variant="text" prepend-icon="mdi-chevron-left" to="/catalog" class="mb-4">
         Back to Catalog
-      </button>
-    </RouterLink>
+      </v-btn>
 
-    <!-- Course Header -->
-    <div class="grid gap-8 lg:grid-cols-3">
-      <div class="space-y-6 lg:col-span-2">
-        <div>
-          <div class="mb-4 flex items-center gap-3">
-            <span class="rounded-full bg-blue-600 px-3 py-1 text-xs font-medium text-white">
-              {{ course.category }}
-            </span>
-            <span class="rounded-full border px-3 py-1 text-xs font-medium">
-              {{ course.level }}
-            </span>
-          </div>
-          <h1 class="mb-3 text-4xl font-bold">{{ course.title }}</h1>
-          <p class="text-lg text-gray-600">{{ course.description }}</p>
-        </div>
+      <v-row>
+        <!-- Main Content -->
+        <v-col cols="12" lg="8">
+          <!-- Course Header -->
+          <v-card class="mb-6">
+            <v-img :src="course.thumbnail" height="300" cover />
+            <v-card-text>
+              <div class="d-flex gap-2 mb-3">
+                <v-chip color="primary" size="small">{{ course.category }}</v-chip>
+                <v-chip
+                  :color="
+                    course.level === 'Beginner'
+                      ? 'success'
+                      : course.level === 'Intermediate'
+                        ? 'warning'
+                        : 'error'
+                  "
+                  size="small"
+                  variant="outlined"
+                >
+                  {{ course.level }}
+                </v-chip>
+              </div>
 
-        <div class="flex flex-wrap items-center gap-6 text-gray-600">
-          <div class="flex items-center gap-2">
-            <Star class="size-5 fill-yellow-400 text-yellow-400" />
-            <span class="font-medium">{{ course.rating }}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <Users class="size-5" />
-            <span>{{ course.enrolledStudents.toLocaleString() }} students</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <Clock class="size-5" />
-            <span>{{ course.duration }} hours</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <BookOpen class="size-5" />
-            <span>{{ totalLessons }} lessons</span>
-          </div>
-        </div>
+              <h1 class="text-h3 font-weight-bold mb-3">{{ course.title }}</h1>
+              <p class="text-h6 text-medium-emphasis mb-4">{{ course.description }}</p>
 
-        <!-- Instructor -->
-        <div class="rounded-lg border bg-white p-6 shadow-sm">
-          <h3 class="mb-4 text-xl font-semibold">Instructor</h3>
-          <div class="flex items-center gap-4">
-            <div class="flex size-16 items-center justify-center rounded-full bg-gray-200">
-              <img
-                v-if="course.instructorImage"
-                :src="course.instructorImage"
-                :alt="course.instructor"
-                class="size-16 rounded-full object-cover"
-              />
-              <span v-else class="text-xl font-medium">{{ course.instructor[0] }}</span>
-            </div>
-            <div>
-              <p class="text-lg font-medium">{{ course.instructor }}</p>
-              <p class="text-gray-600">Expert Instructor</p>
-            </div>
-          </div>
-        </div>
+              <v-row class="text-body-2">
+                <v-col cols="auto">
+                  <v-icon size="small" class="mr-1">mdi-star</v-icon>
+                  <span class="font-weight-bold">{{ course.rating }}</span>
+                </v-col>
+                <v-col cols="auto">
+                  <v-icon size="small" class="mr-1">mdi-account-group</v-icon>
+                  {{ course.studentsEnrolled?.toLocaleString() }} students
+                </v-col>
+                <v-col cols="auto">
+                  <v-icon size="small" class="mr-1">mdi-clock-outline</v-icon>
+                  {{ course.duration }}
+                </v-col>
+                <v-col cols="auto">
+                  <v-icon size="small" class="mr-1">mdi-book-open-variant</v-icon>
+                  {{ totalLessons }} lessons
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
 
-        <!-- Course Curriculum -->
-        <div class="rounded-lg border bg-white p-6 shadow-sm">
-          <h3 class="mb-2 text-xl font-semibold">Course Curriculum</h3>
-          <p class="mb-4 text-sm text-gray-600">
-            {{ course.modules.length }} modules • {{ totalLessons }} lessons
-          </p>
-          <LessonList :modules="course.modules" :course-id="course.id" />
-        </div>
-
-        <!-- What You'll Learn -->
-        <div class="rounded-lg border bg-white p-6 shadow-sm">
-          <h3 class="mb-4 text-xl font-semibold">What You'll Learn</h3>
-          <ul class="grid gap-3 sm:grid-cols-2">
-            <li class="flex items-start gap-2">
-              <Award class="size-5 shrink-0 text-green-600" />
-              <span>Master core concepts and best practices</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <Award class="size-5 shrink-0 text-green-600" />
-              <span>Build real-world projects from scratch</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <Award class="size-5 shrink-0 text-green-600" />
-              <span>Get hands-on experience with industry tools</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <Award class="size-5 shrink-0 text-green-600" />
-              <span>Receive certificate upon completion</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Reviews Section -->
-        <ReviewSection
-          :course-id="course.id"
-          :reviews="course.reviews || []"
-          :average-rating="course.rating"
-          @add-review="handleAddReview"
-          @mark-helpful="handleMarkHelpful"
-        />
-      </div>
-
-      <!-- Sidebar -->
-      <div class="space-y-6">
-        <div class="sticky top-24 rounded-lg border bg-white shadow-sm">
-          <div class="aspect-video overflow-hidden rounded-t-lg">
-            <img :src="course.thumbnail" :alt="course.title" class="size-full object-cover" />
-          </div>
-          <div class="space-y-4 p-6">
-            <div v-if="course.enrolled">
-              <div class="space-y-2">
-                <div class="flex items-center justify-between text-sm">
-                  <span class="text-gray-600">Your Progress</span>
-                  <span class="font-medium">{{ course.progress }}%</span>
+          <!-- Instructor -->
+          <v-card class="mb-6">
+            <v-card-title>Instructor</v-card-title>
+            <v-card-text>
+              <div class="d-flex align-center gap-4">
+                <v-avatar size="64">
+                  <v-img v-if="course.instructor?.avatar" :src="course.instructor.avatar" />
+                  <span v-else>{{ course.instructor?.name?.[0] || 'I' }}</span>
+                </v-avatar>
+                <div>
+                  <p class="text-h6">{{ course.instructor?.name || course.instructor }}</p>
+                  <p class="text-body-2 text-medium-emphasis">Expert Instructor</p>
                 </div>
-                <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                  <div
-                    class="h-full bg-blue-600 transition-all"
-                    :style="{ width: `${course.progress}%` }"
-                  ></div>
+              </div>
+            </v-card-text>
+          </v-card>
+
+          <!-- Curriculum -->
+          <v-card class="mb-6">
+            <v-card-title>Course Curriculum</v-card-title>
+            <v-card-subtitle>
+              {{ course.modules.length }} modules • {{ totalLessons }} lessons
+            </v-card-subtitle>
+            <v-card-text>
+              <LessonList :modules="course.modules" :course-id="course.id" />
+            </v-card-text>
+          </v-card>
+
+          <!-- What You'll Learn -->
+          <v-card class="mb-6">
+            <v-card-title>What You'll Learn</v-card-title>
+            <v-card-text>
+              <v-row>
+                <v-col cols="12" sm="6">
+                  <div class="d-flex align-start gap-2 mb-3">
+                    <v-icon color="success">mdi-check-circle</v-icon>
+                    <span>Master core concepts and best practices</span>
+                  </div>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <div class="d-flex align-start gap-2 mb-3">
+                    <v-icon color="success">mdi-check-circle</v-icon>
+                    <span>Build real-world projects from scratch</span>
+                  </div>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <div class="d-flex align-start gap-2 mb-3">
+                    <v-icon color="success">mdi-check-circle</v-icon>
+                    <span>Get hands-on experience with industry tools</span>
+                  </div>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <div class="d-flex align-start gap-2 mb-3">
+                    <v-icon color="success">mdi-check-circle</v-icon>
+                    <span>Receive certificate upon completion</span>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+
+          <!-- Reviews -->
+          <ReviewSection
+            :course-id="course.id"
+            :reviews="course.reviews || []"
+            :average-rating="course.rating"
+            @add-review="handleAddReview"
+            @mark-helpful="handleMarkHelpful"
+          />
+        </v-col>
+
+        <!-- Sidebar -->
+        <v-col cols="12" lg="4">
+          <v-card class="sticky-top">
+            <v-card-text>
+              <!-- Enrolled State -->
+              <div v-if="course.enrolled">
+                <div class="mb-4">
+                  <div class="d-flex justify-space-between text-body-2 mb-2">
+                    <span>Your Progress</span>
+                    <span class="font-weight-bold">{{ course.progress }}%</span>
+                  </div>
+                  <v-progress-linear
+                    :model-value="course.progress"
+                    color="primary"
+                    height="8"
+                    rounded
+                  />
+                  <p class="text-caption text-medium-emphasis mt-2">
+                    {{ completedLessons }} of {{ totalLessons }} lessons completed
+                  </p>
                 </div>
-                <p class="text-sm text-gray-600">
-                  {{ completedLessons }} of {{ totalLessons }} lessons completed
+
+                <v-btn
+                  v-if="firstIncompleteLesson"
+                  color="primary"
+                  size="large"
+                  block
+                  prepend-icon="mdi-play"
+                  :to="`/course/${course.id}/lesson/${firstIncompleteLesson.id}`"
+                >
+                  Continue Learning
+                </v-btn>
+              </div>
+
+              <!-- Not Enrolled State -->
+              <div v-else>
+                <div class="text-center mb-4">
+                  <p class="text-h3 font-weight-bold">${{ course.price || 49.99 }}</p>
+                  <p class="text-caption text-medium-emphasis">One-time payment</p>
+                </div>
+
+                <v-btn color="primary" size="large" block @click="handleEnroll"> Enroll Now </v-btn>
+
+                <p class="text-center text-caption text-medium-emphasis mt-2">
+                  30-day money-back guarantee
                 </p>
               </div>
-              <RouterLink
-                v-if="firstIncompleteLesson"
-                :to="`/course/${course.id}/lesson/${firstIncompleteLesson.id}`"
-              >
-                <button
-                  class="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                >
-                  <Play class="size-4" />
-                  Continue Learning
-                </button>
-              </RouterLink>
-            </div>
-            <div v-else>
-              <div class="text-center">
-                <p class="text-3xl font-bold">${{ course.price || 49.99 }}</p>
-                <p class="text-sm text-gray-600">One-time payment</p>
-              </div>
-              <button
-                class="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                @click="handleEnrollSafely"
-              >
-                Enroll Now
-              </button>
-              <p class="text-center text-sm text-gray-600">30-day money-back guarantee</p>
-            </div>
 
-            <div class="space-y-3 border-t pt-4">
-              <p class="text-sm font-medium">This course includes:</p>
-              <ul class="space-y-2 text-sm text-gray-600">
-                <li class="flex items-center gap-2">
-                  <Clock class="size-4" />
-                  {{ course.duration }} hours on-demand video
-                </li>
-                <li class="flex items-center gap-2">
-                  <BookOpen class="size-4" />
-                  {{ totalLessons }} lessons
-                </li>
-                <li class="flex items-center gap-2">
-                  <Award class="size-4" />
-                  Certificate of completion
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
+              <v-divider class="my-4" />
+
+              <!-- Course Includes -->
+              <div>
+                <p class="text-body-2 font-weight-medium mb-3">This course includes:</p>
+                <v-list density="compact">
+                  <v-list-item prepend-icon="mdi-clock-outline">
+                    <v-list-item-title class="text-body-2">
+                      {{ course.duration }} on-demand video
+                    </v-list-item-title>
+                  </v-list-item>
+                  <v-list-item prepend-icon="mdi-book-open-variant">
+                    <v-list-item-title class="text-body-2">
+                      {{ totalLessons }} lessons
+                    </v-list-item-title>
+                  </v-list-item>
+                  <v-list-item prepend-icon="mdi-certificate">
+                    <v-list-item-title class="text-body-2">
+                      Certificate of completion
+                    </v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
     </div>
-  </div>
+  </v-container>
 </template>
+
+<style scoped>
+.sticky-top {
+  position: sticky;
+  top: 80px;
+}
+</style>

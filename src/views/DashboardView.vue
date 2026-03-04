@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCoursesStore } from '@/stores/courses'
-import CourseCard from '@/components/CourseCard.vue'
+import VCourseCard from '@/components/ui/VCourseCard.vue'
+import VStatsCard from '@/components/ui/VStatsCard.vue'
 import ProgressChart from '@/components/ProgressChart.vue'
-import { BookOpen, TrendingUp, Award, Clock } from 'lucide-vue-next'
 
+const router = useRouter()
 const coursesStore = useCoursesStore()
 
 const enrolledCourses = computed(() => coursesStore.enrolledCourses)
@@ -13,30 +15,26 @@ const stats = computed(() => [
   {
     title: 'Courses Enrolled',
     value: enrolledCourses.value.length,
-    icon: BookOpen,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
+    icon: 'mdi-book-open-variant',
+    color: 'primary',
   },
   {
     title: 'Hours Learned',
     value: '24',
-    icon: Clock,
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
+    icon: 'mdi-clock-outline',
+    color: 'success',
   },
   {
     title: 'Avg. Progress',
     value: `${coursesStore.overallProgress}%`,
-    icon: TrendingUp,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
+    icon: 'mdi-trending-up',
+    color: 'secondary',
   },
   {
     title: 'Certificates',
     value: coursesStore.completedCourses.length,
-    icon: Award,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
+    icon: 'mdi-certificate',
+    color: 'warning',
   },
 ])
 
@@ -50,71 +48,83 @@ const progressData = computed(() =>
 const recommendedCourses = computed(() =>
   coursesStore.courses.filter((c) => !c.enrolled).slice(0, 3),
 )
+
+function handleCourseClick(courseId: string) {
+  router.push(`/course/${courseId}`)
+}
+
+function handleContinue(courseId: string) {
+  const course = coursesStore.getCourseById(courseId)
+  if (course?.currentLesson) {
+    router.push(`/course/${courseId}/lesson/${course.currentLesson}`)
+  } else {
+    router.push(`/course/${courseId}`)
+  }
+}
 </script>
 
 <template>
-  <div class="space-y-8">
+  <v-container fluid>
     <!-- Welcome Section -->
-    <div>
-      <h1 class="text-3xl font-bold">Welcome back!</h1>
-      <p class="text-gray-600">Continue your learning journey</p>
-    </div>
+    <v-row class="mb-6">
+      <v-col>
+        <h1 class="text-h3 font-weight-bold mb-2">Welcome back!</h1>
+        <p class="text-body-1 text-medium-emphasis">Continue your learning journey</p>
+      </v-col>
+    </v-row>
 
     <!-- Stats Grid -->
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      <div v-for="stat in stats" :key="stat.title" class="rounded-lg border bg-white p-6 shadow-sm">
-        <div class="flex items-center gap-4">
-          <div
-            :class="[
-              'flex size-12 shrink-0 items-center justify-center rounded-full',
-              stat.bgColor,
-            ]"
-          >
-            <component :is="stat.icon" :class="['size-6', stat.color]" />
-          </div>
-          <div>
-            <p class="text-sm text-gray-600">{{ stat.title }}</p>
-            <p class="text-2xl font-bold">{{ stat.value }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <v-row>
+      <v-col v-for="stat in stats" :key="stat.title" cols="12" sm="6" lg="3">
+        <VStatsCard :title="stat.title" :value="stat.value" :icon="stat.icon" :color="stat.color" />
+      </v-col>
+    </v-row>
 
     <!-- Progress Chart -->
-    <div v-if="enrolledCourses.length > 0" class="rounded-lg border bg-white p-6 shadow-sm">
-      <h2 class="mb-4 text-xl font-semibold">Your Progress</h2>
-      <ProgressChart :data="progressData" />
-    </div>
+    <v-row v-if="enrolledCourses.length > 0">
+      <v-col cols="12">
+        <v-card>
+          <v-card-title>Your Progress</v-card-title>
+          <v-card-text>
+            <ProgressChart :data="progressData" />
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
 
     <!-- Continue Learning -->
-    <div v-if="enrolledCourses.length > 0">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-2xl font-bold">Continue Learning</h2>
-        <RouterLink to="/my-learning" class="text-sm text-blue-600 hover:underline">
-          View all
-        </RouterLink>
-      </div>
-      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <CourseCard
-          v-for="course in enrolledCourses"
-          :key="course.id"
+    <v-row v-if="enrolledCourses.length > 0" class="mt-4">
+      <v-col cols="12">
+        <div class="d-flex align-center justify-space-between mb-4">
+          <h2 class="text-h5 font-weight-bold">Continue Learning</h2>
+          <v-btn variant="text" color="primary" to="/my-learning">View all</v-btn>
+        </div>
+      </v-col>
+      <v-col v-for="course in enrolledCourses" :key="course.id" cols="12" sm="6" lg="4">
+        <VCourseCard
           :course="course"
-          :show-progress="true"
+          :enrolled="true"
+          @click="handleCourseClick(course.id)"
+          @continue="handleContinue(course.id)"
         />
-      </div>
-    </div>
+      </v-col>
+    </v-row>
 
     <!-- Recommended Courses -->
-    <div>
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-2xl font-bold">Recommended for You</h2>
-        <RouterLink to="/catalog" class="text-sm text-blue-600 hover:underline">
-          Browse all
-        </RouterLink>
-      </div>
-      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <CourseCard v-for="course in recommendedCourses" :key="course.id" :course="course" />
-      </div>
-    </div>
-  </div>
+    <v-row class="mt-4">
+      <v-col cols="12">
+        <div class="d-flex align-center justify-space-between mb-4">
+          <h2 class="text-h5 font-weight-bold">Recommended for You</h2>
+          <v-btn variant="text" color="primary" to="/catalog">Browse all</v-btn>
+        </div>
+      </v-col>
+      <v-col v-for="course in recommendedCourses" :key="course.id" cols="12" sm="6" lg="4">
+        <VCourseCard
+          :course="course"
+          @click="handleCourseClick(course.id)"
+          @enroll="coursesStore.enrollInCourse(course.id)"
+        />
+      </v-col>
+    </v-row>
+  </v-container>
 </template>

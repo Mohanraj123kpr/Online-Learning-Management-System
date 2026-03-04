@@ -20,13 +20,15 @@ export interface Course {
   id: string
   title: string
   description: string
-  instructor: string
-  instructorImage: string
+  instructor: {
+    name: string
+    avatar: string
+  }
   thumbnail: string
   category: string
   level: 'Beginner' | 'Intermediate' | 'Advanced'
-  duration: number
-  enrolledStudents: number
+  duration: string
+  studentsEnrolled: number
   rating: number
   modules: Module[]
   price?: number
@@ -34,6 +36,7 @@ export interface Course {
   progress?: number
   bookmarked?: boolean
   reviews?: Review[]
+  currentLesson?: string
 }
 
 export interface UserProgress {

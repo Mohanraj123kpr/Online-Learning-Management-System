@@ -38,6 +38,16 @@ const router = createRouter({
       name: 'profile',
       component: () => import('@/views/ProfileView.vue'),
     },
+    {
+      path: '/discussions',
+      name: 'discussions',
+      component: () => import('@/views/DiscussionsView.vue'),
+    },
+    {
+      path: '/discussions/:id',
+      name: 'discussion-detail',
+      component: () => import('@/views/DiscussionDetailView.vue'),
+    },
   ],
 })
 

@@ -1,9 +1,10 @@
 import { useParams, Link } from 'react-router';
-import { mockCourses } from '../data/mockData';
+import { mockCourses, mockReviews } from '../data/mockData';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { LessonList } from '../components/LessonList';
+import { ReviewSection } from '../components/ReviewSection';
 import { Progress } from '../components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Clock, Users, Star, BookOpen, Award, ChevronLeft, Play } from 'lucide-react';
@@ -99,6 +100,7 @@ export function CourseDetail() {
             <TabsList>
               <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
 
             <TabsContent value="curriculum" className="mt-6">
@@ -141,6 +143,17 @@ export function CourseDetail() {
                   </ul>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="reviews" className="mt-6">
+              <ReviewSection
+                reviews={mockReviews.filter(r => r.courseId === course.id)}
+                averageRating={course.rating}
+                totalReviews={mockReviews.filter(r => r.courseId === course.id).length}
+                onAddReview={(rating, comment) => {
+                  console.log('New review:', rating, comment);
+                }}
+              />
             </TabsContent>
           </Tabs>
         </div>

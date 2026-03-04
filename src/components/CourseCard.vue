@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BookOpen, Clock, Users, Star } from 'lucide-vue-next'
+import { BookOpen, Clock, Users, Star, Bookmark } from 'lucide-vue-next'
+import { useCoursesStore } from '@/stores/courses'
 
 interface Course {
   id: string
@@ -18,6 +19,7 @@ interface Course {
   price?: number
   enrolled?: boolean
   progress?: number
+  bookmarked?: boolean
 }
 
 interface Props {
@@ -29,7 +31,14 @@ const props = withDefaults(defineProps<Props>(), {
   showProgress: false,
 })
 
+const coursesStore = useCoursesStore()
 const instructorInitial = computed(() => props.course.instructor[0])
+
+function toggleBookmark(e: Event) {
+  e.preventDefault()
+  e.stopPropagation()
+  coursesStore.toggleBookmark(props.course.id)
+}
 </script>
 
 <template>
@@ -49,6 +58,14 @@ const instructorInitial = computed(() => props.course.instructor[0])
         >
           {{ course.level }}
         </span>
+        <button
+          @click="toggleBookmark"
+          class="absolute left-3 top-3 rounded-full bg-white/90 p-2 transition-colors hover:bg-white"
+        >
+          <Bookmark
+            :class="['size-4', course.bookmarked ? 'fill-blue-600 text-blue-600' : 'text-gray-600']"
+          />
+        </button>
       </div>
     </RouterLink>
 

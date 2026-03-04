@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { BookOpen, Home, GraduationCap, Search, User, Menu, X } from 'lucide-vue-next'
+import { BookOpen, Home, GraduationCap, Search, Award, Menu, X } from 'lucide-vue-next'
 
 const route = useRoute()
 const mobileMenuOpen = ref(false)
@@ -58,6 +58,20 @@ const isActive = (path: string) => route.path === path
             >
               <BookOpen class="size-4" />
               <span>My Learning</span>
+            </button>
+          </RouterLink>
+
+          <RouterLink to="/certificates">
+            <button
+              :class="[
+                'flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                isActive('/certificates')
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-100',
+              ]"
+            >
+              <Award class="size-4" />
+              <span>Certificates</span>
             </button>
           </RouterLink>
         </nav>
@@ -141,6 +155,20 @@ const isActive = (path: string) => route.path === path
             >
               <BookOpen class="size-4" />
               <span>My Learning</span>
+            </button>
+          </RouterLink>
+
+          <RouterLink to="/certificates" @click="mobileMenuOpen = false">
+            <button
+              :class="[
+                'flex w-full items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors',
+                isActive('/certificates')
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-100',
+              ]"
+            >
+              <Award class="size-4" />
+              <span>Certificates</span>
             </button>
           </RouterLink>
         </div>

@@ -1,4 +1,4 @@
-import { Course, UserProgress } from '../types';
+import { Course, UserProgress, Review, Certificate, Bookmark, Note } from '../types';
 
 export const mockCourses: Course[] = [
   {
@@ -45,6 +45,34 @@ export const mockCourses: Course[] = [
             duration: 10,
             type: 'quiz',
             completed: false,
+            quizQuestions: [
+              {
+                id: 'q1',
+                question: 'What does HTML stand for?',
+                options: [
+                  'Hyper Text Markup Language',
+                  'High Tech Modern Language',
+                  'Home Tool Markup Language',
+                  'Hyperlinks and Text Markup Language',
+                ],
+                correctAnswer: 0,
+                explanation: 'HTML stands for Hyper Text Markup Language, which is the standard markup language for creating web pages.',
+              },
+              {
+                id: 'q2',
+                question: 'Which HTML tag is used for the largest heading?',
+                options: ['<head>', '<h6>', '<heading>', '<h1>'],
+                correctAnswer: 3,
+                explanation: 'The <h1> tag is used for the largest heading in HTML, with <h6> being the smallest.',
+              },
+              {
+                id: 'q3',
+                question: 'What is the correct HTML element for inserting a line break?',
+                options: ['<break>', '<br>', '<lb>', '<linebreak>'],
+                correctAnswer: 1,
+                explanation: 'The <br> tag is used to insert a line break in HTML.',
+              },
+            ],
           },
         ],
       },
@@ -269,5 +297,84 @@ export const mockUserProgress: UserProgress[] = [
     completedLessons: ['l7'],
     lastAccessedLesson: 'l8',
     progress: 20,
+  },
+];
+
+export const mockReviews: Review[] = [
+  {
+    id: 'r1',
+    courseId: '1',
+    userId: 'user1',
+    userName: 'Alex Thompson',
+    userAvatar: 'https://images.unsplash.com/photo-1629507208649-70919ca33793?w=100',
+    rating: 5,
+    comment: 'This course is amazing! I learned so much and the projects were challenging but rewarding. Sarah is an excellent instructor.',
+    date: new Date('2024-02-15'),
+    helpful: 24,
+  },
+  {
+    id: 'r2',
+    courseId: '1',
+    userId: 'user2',
+    userName: 'Maria Garcia',
+    userAvatar: 'https://images.unsplash.com/photo-1758685845872-4edbf0e76014?w=100',
+    rating: 4,
+    comment: 'Great course overall! The content is very comprehensive. Would have liked more advanced topics though.',
+    date: new Date('2024-02-10'),
+    helpful: 18,
+  },
+  {
+    id: 'r3',
+    courseId: '1',
+    userId: 'user3',
+    userName: 'John Smith',
+    userAvatar: 'https://images.unsplash.com/photo-1684236685989-baafbf7bef95?w=100',
+    rating: 5,
+    comment: 'Perfect for beginners! The step-by-step approach made it easy to follow along.',
+    date: new Date('2024-01-28'),
+    helpful: 32,
+  },
+  {
+    id: 'r4',
+    courseId: '2',
+    userId: 'user4',
+    userName: 'Linda Chen',
+    userAvatar: 'https://images.unsplash.com/photo-1629507208649-70919ca33793?w=100',
+    rating: 5,
+    comment: 'Dr. Chen is brilliant! The machine learning section was particularly insightful.',
+    date: new Date('2024-02-20'),
+    helpful: 41,
+  },
+];
+
+export const mockCertificates: Certificate[] = [];
+
+export const mockBookmarks: Bookmark[] = [
+  {
+    courseId: '3',
+    addedAt: new Date('2024-02-10'),
+  },
+  {
+    courseId: '4',
+    addedAt: new Date('2024-02-12'),
+  },
+];
+
+export const mockNotes: Note[] = [
+  {
+    id: 'n1',
+    courseId: '1',
+    lessonId: 'l1',
+    content: 'Web development consists of frontend and backend. Frontend is what users see and interact with.',
+    timestamp: 120,
+    createdAt: new Date('2024-02-15T10:30:00'),
+  },
+  {
+    id: 'n2',
+    courseId: '1',
+    lessonId: 'l2',
+    content: 'Important tools: VS Code, Chrome DevTools, Node.js, Git',
+    timestamp: 450,
+    createdAt: new Date('2024-02-16T14:20:00'),
   },
 ];

@@ -1,18 +1,30 @@
 import { Link } from 'react-router';
+import { useState } from 'react';
 import { Course } from '../types';
 import { Card, CardContent, CardFooter, CardHeader } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Clock, Users, Star } from 'lucide-react';
+import { Clock, Users, Star, Bookmark } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 interface CourseCardProps {
   course: Course;
   showProgress?: boolean;
+  isBookmarked?: boolean;
+  onToggleBookmark?: (courseId: string) => void;
 }
 
-export function CourseCard({ course, showProgress = false }: CourseCardProps) {
+export function CourseCard({ course, showProgress = false, isBookmarked = false, onToggleBookmark }: CourseCardProps) {
+  const [bookmarked, setBookmarked] = useState(isBookmarked);
+
+  const handleBookmarkClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setBookmarked(!bookmarked);
+    onToggleBookmark?.(course.id);
+  };
+
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-lg">
       <Link to={`/course/${course.id}`}>
@@ -23,6 +35,16 @@ export function CourseCard({ course, showProgress = false }: CourseCardProps) {
             className="size-full object-cover transition-transform hover:scale-105"
           />
           <Badge className="absolute right-3 top-3">{course.level}</Badge>
+          {onToggleBookmark && (
+            <button
+              onClick={handleBookmarkClick}
+              className="absolute left-3 top-3 rounded-full bg-white p-2 shadow-md transition-transform hover:scale-110"
+            >
+              <Bookmark
+                className={`size-4 ${bookmarked ? 'fill-blue-600 text-blue-600' : 'text-gray-600'}`}
+              />
+            </button>
+          )}
         </div>
       </Link>
 

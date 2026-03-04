@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router';
-import { BookOpen, Home, GraduationCap, Search, User, Menu } from 'lucide-react';
+import { BookOpen, Home, GraduationCap, Search, User, Menu, Award } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
@@ -39,6 +39,15 @@ export function Header() {
         >
           <BookOpen className="size-4" />
           <span>My Learning</span>
+        </Button>
+      </Link>
+      <Link to="/certificates">
+        <Button
+          variant={isActive('/certificates') ? 'default' : 'ghost'}
+          className="gap-2"
+        >
+          <Award className="size-4" />
+          <span>Certificates</span>
         </Button>
       </Link>
     </>

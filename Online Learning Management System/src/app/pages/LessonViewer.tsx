@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
-import { mockCourses } from '../data/mockData';
+import { mockCourses, mockNotes } from '../data/mockData';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
 import { ChevronLeft, ChevronRight, CheckCircle2, PlayCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { QuizComponent } from '../components/QuizComponent';
+import { NotesPanel } from '../components/NotesPanel';
+import { CertificateModal } from '../components/CertificateModal';
+import { Certificate } from '../types';
 
 export function LessonViewer() {
   const { courseId, lessonId } = useParams();
@@ -13,6 +17,11 @@ export function LessonViewer() {
   const course = mockCourses.find(c => c.id === courseId);
 
   const [activeTab, setActiveTab] = useState('lesson');
+  const [lessonNotes, setLessonNotes] = useState(
+    mockNotes.filter(n => n.courseId === courseId && n.lessonId === lessonId)
+  );
+  const [showCertificate, setShowCertificate] = useState(false);
+  const [certificate, setCertificate] = useState<Certificate | null>(null);
 
   if (!course) {
     return (
@@ -54,8 +63,46 @@ export function LessonViewer() {
     if (nextLesson) {
       navigate(`/course/${courseId}/lesson/${nextLesson.id}`);
     } else {
+      // Course completed! Show certificate
+      if (course) {
+        const newCertificate: Certificate = {
+          id: `cert-${Date.now()}`,
+          courseId: course.id,
+          courseName: course.title,
+          studentName: 'John Doe', // In real app, use actual user name
+          completedDate: new Date(),
+          instructor: course.instructor,
+        };
+        setCertificate(newCertificate);
+        setShowCertificate(true);
+      }
       navigate(`/course/${courseId}`);
     }
+  };
+
+  const handleQuizComplete = (score: number, passed: boolean) => {
+    if (passed) {
+      // Auto-advance to next lesson after quiz
+      setTimeout(() => {
+        handleMarkComplete();
+      }, 2000);
+    }
+  };
+
+  const handleAddNote = (content: string) => {
+    const newNote = {
+      id: `note-${Date.now()}`,
+      courseId: courseId!,
+      lessonId: lessonId!,
+      content,
+      timestamp: 0, // In real app, get current video timestamp
+      createdAt: new Date(),
+    };
+    setLessonNotes([...lessonNotes, newNote]);
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    setLessonNotes(lessonNotes.filter(n => n.id !== noteId));
   };
 
   const completedCount = allLessons.filter(l => l.completed).length;
@@ -82,39 +129,35 @@ export function LessonViewer() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Video/Content Area */}
-          <Card className="overflow-hidden">
-            {currentLesson.type === 'video' && (
-              <div className="relative aspect-video bg-gray-900 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <PlayCircle className="size-16 mx-auto mb-4 opacity-80" />
-                  <p className="text-lg">Video Player</p>
-                  <p className="text-sm text-gray-400">
-                    In a real application, this would be an embedded video player
-                  </p>
+          {currentLesson.type === 'quiz' && currentLesson.quizQuestions ? (
+            <QuizComponent
+              questions={currentLesson.quizQuestions}
+              onComplete={handleQuizComplete}
+            />
+          ) : (
+            <Card className="overflow-hidden">
+              {currentLesson.type === 'video' && (
+                <div className="relative aspect-video bg-gray-900 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <PlayCircle className="size-16 mx-auto mb-4 opacity-80" />
+                    <p className="text-lg">Video Player</p>
+                    <p className="text-sm text-gray-400">
+                      In a real application, this would be an embedded video player
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
-            {currentLesson.type === 'reading' && (
-              <div className="aspect-video bg-gray-50 flex items-center justify-center p-8">
-                <div className="max-w-2xl text-center">
-                  <p className="text-lg text-gray-600">
-                    Reading material would be displayed here
-                  </p>
+              )}
+              {currentLesson.type === 'reading' && (
+                <div className="aspect-video bg-gray-50 flex items-center justify-center p-8">
+                  <div className="max-w-2xl text-center">
+                    <p className="text-lg text-gray-600">
+                      Reading material would be displayed here
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
-            {currentLesson.type === 'quiz' && (
-              <div className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-8">
-                <div className="max-w-2xl text-center">
-                  <CheckCircle2 className="size-16 mx-auto mb-4 text-blue-600" />
-                  <p className="text-lg">Quiz Interface</p>
-                  <p className="text-sm text-gray-600">
-                    Interactive quiz questions would appear here
-                  </p>
-                </div>
-              </div>
-            )}
-          </Card>
+              )}
+            </Card>
+          )}
 
           {/* Lesson Details */}
           <Card>
@@ -128,7 +171,7 @@ export function LessonViewer() {
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList>
                   <TabsTrigger value="lesson">Overview</TabsTrigger>
-                  <TabsTrigger value="notes">Notes</TabsTrigger>
+                  <TabsTrigger value="notes">Notes ({lessonNotes.length})</TabsTrigger>
                   <TabsTrigger value="resources">Resources</TabsTrigger>
                 </TabsList>
 
@@ -142,11 +185,11 @@ export function LessonViewer() {
                 </TabsContent>
 
                 <TabsContent value="notes" className="mt-4">
-                  <div className="rounded-lg border p-4">
-                    <p className="text-sm text-gray-600">
-                      Take notes while learning... (Note-taking feature would be here)
-                    </p>
-                  </div>
+                  <NotesPanel
+                    notes={lessonNotes}
+                    onAddNote={handleAddNote}
+                    onDeleteNote={handleDeleteNote}
+                  />
                 </TabsContent>
 
                 <TabsContent value="resources" className="mt-4">
@@ -235,6 +278,14 @@ export function LessonViewer() {
           </Card>
         </div>
       </div>
+
+      {/* Certificate Modal */}
+      {showCertificate && certificate && (
+        <CertificateModal
+          certificate={certificate}
+          onClose={() => setShowCertificate(false)}
+        />
+      )}
     </div>
   );
 }

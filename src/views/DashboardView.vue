@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { mockCourses } from '@/data/mockData'
+import { useCoursesStore } from '@/stores/courses'
 import CourseCard from '@/components/CourseCard.vue'
 import ProgressChart from '@/components/ProgressChart.vue'
 import { BookOpen, TrendingUp, Award, Clock } from 'lucide-vue-next'
 
-const enrolledCourses = computed(() => mockCourses.filter((c) => c.enrolled))
+const coursesStore = useCoursesStore()
+
+const enrolledCourses = computed(() => coursesStore.enrolledCourses)
 
 const stats = computed(() => [
   {
@@ -24,14 +26,14 @@ const stats = computed(() => [
   },
   {
     title: 'Avg. Progress',
-    value: '32%',
+    value: `${coursesStore.overallProgress}%`,
     icon: TrendingUp,
     color: 'text-purple-600',
     bgColor: 'bg-purple-100',
   },
   {
     title: 'Certificates',
-    value: '0',
+    value: coursesStore.completedCourses.length,
     icon: Award,
     color: 'text-amber-600',
     bgColor: 'bg-amber-100',
@@ -45,7 +47,9 @@ const progressData = computed(() =>
   })),
 )
 
-const recommendedCourses = computed(() => mockCourses.filter((c) => !c.enrolled).slice(0, 3))
+const recommendedCourses = computed(() =>
+  coursesStore.courses.filter((c) => !c.enrolled).slice(0, 3),
+)
 </script>
 
 <template>

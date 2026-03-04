@@ -5,6 +5,7 @@ import { CourseCatalog } from './pages/CourseCatalog';
 import { CourseDetail } from './pages/CourseDetail';
 import { LessonViewer } from './pages/LessonViewer';
 import { MyLearning } from './pages/MyLearning';
+import { Certificates } from './pages/Certificates';
 import { NotFound } from './pages/NotFound';
 
 export const router = createBrowserRouter([
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
       { index: true, Component: Dashboard },
       { path: 'catalog', Component: CourseCatalog },
       { path: 'my-learning', Component: MyLearning },
+      { path: 'certificates', Component: Certificates },
       { path: 'course/:courseId', Component: CourseDetail },
       { path: 'course/:courseId/lesson/:lessonId', Component: LessonViewer },
       { path: '*', Component: NotFound },

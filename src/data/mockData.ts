@@ -14,6 +14,8 @@ interface Course {
   price?: number
   enrolled?: boolean
   progress?: number
+  bookmarked?: boolean
+  reviews?: any[]
 }
 
 interface UserProgress {
@@ -21,6 +23,24 @@ interface UserProgress {
   completedLessons: string[]
   lastAccessedLesson?: string
   progress: number
+}
+
+interface Note {
+  id: string
+  courseId: string
+  lessonId: string
+  content: string
+  timestamp: number
+  createdAt: Date
+}
+
+interface Certificate {
+  id: string
+  courseId: string
+  courseName: string
+  studentName: string
+  completionDate: Date
+  instructor: string
 }
 
 export const mockCourses: Course[] = [
@@ -41,6 +61,30 @@ export const mockCourses: Course[] = [
     rating: 4.8,
     enrolled: true,
     progress: 45,
+    bookmarked: true,
+    reviews: [
+      {
+        id: 'r1',
+        courseId: '1',
+        userId: 'u1',
+        userName: 'John Doe',
+        rating: 5,
+        comment:
+          'Excellent course! The instructor explains everything clearly and the projects are very practical.',
+        createdAt: new Date('2024-02-15'),
+        helpful: 12,
+      },
+      {
+        id: 'r2',
+        courseId: '1',
+        userId: 'u2',
+        userName: 'Jane Smith',
+        rating: 4,
+        comment: 'Great content, but I wish there were more advanced topics covered.',
+        createdAt: new Date('2024-02-20'),
+        helpful: 5,
+      },
+    ],
     modules: [
       {
         id: 'm1',
@@ -52,7 +96,8 @@ export const mockCourses: Course[] = [
             description: "Learn the fundamentals of web development and what you'll build",
             duration: 15,
             type: 'video',
-            videoUrl: 'https://example.com/video1',
+            videoUrl:
+              'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
             completed: true,
           },
           {
@@ -61,8 +106,46 @@ export const mockCourses: Course[] = [
             description: 'Install and configure all necessary tools',
             duration: 20,
             type: 'video',
-            videoUrl: 'https://example.com/video2',
+            videoUrl:
+              'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
             completed: true,
+          },
+          {
+            id: 'l3',
+            title: 'HTML Basics Quiz',
+            description: 'Test your knowledge of HTML fundamentals',
+            duration: 10,
+            type: 'quiz',
+            quizQuestions: [
+              {
+                id: 'q1',
+                question: 'What does HTML stand for?',
+                options: [
+                  'Hyper Text Markup Language',
+                  'High Tech Modern Language',
+                  'Home Tool Markup Language',
+                  'Hyperlinks and Text Markup Language',
+                ],
+                correctAnswer: 0,
+                explanation:
+                  'HTML stands for Hyper Text Markup Language, which is the standard markup language for creating web pages.',
+              },
+              {
+                id: 'q2',
+                question: 'Which HTML tag is used for the largest heading?',
+                options: ['<heading>', '<h6>', '<h1>', '<head>'],
+                correctAnswer: 2,
+                explanation:
+                  'The <h1> tag is used for the largest heading in HTML, with <h6> being the smallest.',
+              },
+              {
+                id: 'q3',
+                question: 'What is the correct HTML element for inserting a line break?',
+                options: ['<break>', '<br>', '<lb>', '<newline>'],
+                correctAnswer: 1,
+                explanation: 'The <br> tag is used to insert a line break in HTML.',
+              },
+            ],
           },
         ],
       },
@@ -121,3 +204,24 @@ export const mockUserProgress: UserProgress[] = [
     progress: 20,
   },
 ]
+
+export const mockNotes: Note[] = [
+  {
+    id: 'n1',
+    courseId: '1',
+    lessonId: 'l1',
+    content: 'Remember to practice HTML tags daily',
+    timestamp: 120,
+    createdAt: new Date('2024-02-10'),
+  },
+  {
+    id: 'n2',
+    courseId: '1',
+    lessonId: 'l1',
+    content: 'Important: Semantic HTML improves accessibility',
+    timestamp: 300,
+    createdAt: new Date('2024-02-10'),
+  },
+]
+
+export const mockCertificates: Certificate[] = []

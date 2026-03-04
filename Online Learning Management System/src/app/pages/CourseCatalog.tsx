@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { mockCourses } from '../data/mockData';
+import { mockCourses, mockBookmarks } from '../data/mockData';
 import { CourseCard } from '../components/CourseCard';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
@@ -10,6 +10,9 @@ export function CourseCatalog() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [bookmarkedCourses, setBookmarkedCourses] = useState(
+    mockBookmarks.map(b => b.courseId)
+  );
 
   const categories = ['all', ...Array.from(new Set(mockCourses.map(c => c.category)))];
   const levels = ['all', 'Beginner', 'Intermediate', 'Advanced'];
@@ -22,6 +25,14 @@ export function CourseCatalog() {
     
     return matchesSearch && matchesCategory && matchesLevel;
   });
+
+  const handleToggleBookmark = (courseId: string) => {
+    setBookmarkedCourses(prev => 
+      prev.includes(courseId)
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -82,7 +93,12 @@ export function CourseCatalog() {
       {filteredCourses.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredCourses.map((course) => (
-            <CourseCard key={course.id} course={course} />
+            <CourseCard
+              key={course.id}
+              course={course}
+              isBookmarked={bookmarkedCourses.includes(course.id)}
+              onToggleBookmark={handleToggleBookmark}
+            />
           ))}
         </div>
       ) : (

@@ -3,6 +3,8 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCoursesStore } from '@/stores/courses'
 import VCourseCard from '@/components/ui/VCourseCard.vue'
+import VButton from '@/components/ui/VButton.vue'
+import VTextField from '@/components/ui/VTextField.vue'
 
 const router = useRouter()
 const coursesStore = useCoursesStore()
@@ -59,11 +61,10 @@ function handleEnroll(courseId: string) {
             <v-row>
               <!-- Search -->
               <v-col cols="12" md="6">
-                <v-text-field
+                <VTextField
                   v-model="searchQuery"
                   label="Search courses"
                   prepend-inner-icon="mdi-magnify"
-                  variant="outlined"
                   density="comfortable"
                   hide-details
                   clearable
@@ -127,8 +128,7 @@ function handleEnroll(courseId: string) {
           <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-magnify</v-icon>
           <h3 class="text-h5 mb-2">No courses found</h3>
           <p class="text-body-1 text-medium-emphasis mb-4">Try adjusting your search or filters</p>
-          <v-btn
-            color="primary"
+          <VButton
             @click="
               () => {
                 searchQuery = ''
@@ -138,7 +138,7 @@ function handleEnroll(courseId: string) {
             "
           >
             Clear Filters
-          </v-btn>
+          </VButton>
         </v-card>
       </v-col>
     </v-row>

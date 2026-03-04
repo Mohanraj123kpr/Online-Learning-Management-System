@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useDiscussionsStore } from '@/stores/discussions'
 import { useUserStore } from '@/stores/user'
 import { useToast } from '@/composables/useToast'
+import VButton from '@/components/ui/VButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -75,15 +76,15 @@ function getCategoryColor(category: string) {
 <template>
   <v-container fluid>
     <!-- Back Button -->
-    <v-btn
+    <VButton
       variant="text"
       prepend-icon="mdi-chevron-left"
       @click="router.back()"
-      class="mb-4"
       color="grey-darken-1"
+      class="mb-4"
     >
       Back to Discussions
-    </v-btn>
+    </VButton>
 
     <!-- Not Found -->
     <v-card v-if="!discussion" class="text-center pa-12">
@@ -101,13 +102,25 @@ function getCategoryColor(category: string) {
           <v-row>
             <!-- Vote Section -->
             <v-col cols="auto" class="d-flex flex-column align-center">
-              <v-btn icon size="small" variant="text" color="grey-darken-1" @click="handleVote(1)">
+              <VButton
+                :icon="true"
+                size="small"
+                variant="text"
+                color="grey-darken-1"
+                @click="handleVote(1)"
+              >
                 <v-icon>mdi-chevron-up</v-icon>
-              </v-btn>
+              </VButton>
               <span class="text-h5 font-weight-bold my-2">{{ discussion.votes }}</span>
-              <v-btn icon size="small" variant="text" color="grey-darken-1" @click="handleVote(-1)">
+              <VButton
+                :icon="true"
+                size="small"
+                variant="text"
+                color="grey-darken-1"
+                @click="handleVote(-1)"
+              >
                 <v-icon>mdi-chevron-down</v-icon>
-              </v-btn>
+              </VButton>
             </v-col>
 
             <!-- Content -->
@@ -175,25 +188,25 @@ function getCategoryColor(category: string) {
                 <v-row>
                   <!-- Vote Section -->
                   <v-col cols="auto" class="d-flex flex-column align-center">
-                    <v-btn
-                      icon
+                    <VButton
+                      :icon="true"
                       size="x-small"
                       variant="text"
                       color="grey-darken-1"
                       @click="handleReplyVote(reply.id, 1)"
                     >
                       <v-icon size="small">mdi-chevron-up</v-icon>
-                    </v-btn>
+                    </VButton>
                     <span class="text-body-1 font-weight-bold my-1">{{ reply.votes }}</span>
-                    <v-btn
-                      icon
+                    <VButton
+                      :icon="true"
                       size="x-small"
                       variant="text"
                       color="grey-darken-1"
                       @click="handleReplyVote(reply.id, -1)"
                     >
                       <v-icon size="small">mdi-chevron-down</v-icon>
-                    </v-btn>
+                    </VButton>
                   </v-col>
 
                   <!-- Content -->
@@ -228,14 +241,9 @@ function getCategoryColor(category: string) {
 
                     <!-- Actions -->
                     <div v-if="!reply.isBestAnswer && !discussion.isResolved">
-                      <v-btn
-                        size="small"
-                        variant="text"
-                        color="primary"
-                        @click="handleMarkBestAnswer(reply.id)"
-                      >
+                      <VButton size="small" variant="text" @click="handleMarkBestAnswer(reply.id)">
                         Mark as best answer
-                      </v-btn>
+                      </VButton>
                     </div>
                   </v-col>
                 </v-row>
@@ -261,14 +269,9 @@ function getCategoryColor(category: string) {
             rows="4"
             class="mb-4"
           />
-          <v-btn
-            color="primary"
-            size="large"
-            :disabled="!replyContent.trim()"
-            @click="handleSubmitReply"
-          >
+          <VButton size="large" :disabled="!replyContent.trim()" @click="handleSubmitReply">
             Post Reply
-          </v-btn>
+          </VButton>
         </v-card-text>
       </v-card>
     </div>

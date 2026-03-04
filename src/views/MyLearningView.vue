@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCoursesStore } from '@/stores/courses'
 import VCourseCard from '@/components/ui/VCourseCard.vue'
+import VButton from '@/components/ui/VButton.vue'
 
 const router = useRouter()
 const coursesStore = useCoursesStore()
@@ -86,7 +87,7 @@ function handleContinue(courseId: string) {
               <p class="text-body-1 text-medium-emphasis mb-4">
                 Start learning by enrolling in a course
               </p>
-              <v-btn color="primary" to="/catalog">Browse Courses</v-btn>
+              <VButton to="/catalog">Browse Courses</VButton>
             </v-card>
           </v-col>
         </v-row>
@@ -109,7 +110,7 @@ function handleContinue(courseId: string) {
               <p class="text-body-1 text-medium-emphasis mb-4">
                 Complete your first course to earn a certificate
               </p>
-              <v-btn color="primary" to="/my-learning">View In Progress</v-btn>
+              <VButton to="/my-learning">View In Progress</VButton>
             </v-card>
           </v-col>
         </v-row>

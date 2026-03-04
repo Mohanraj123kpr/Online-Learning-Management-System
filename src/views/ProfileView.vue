@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useToast } from '@/composables/useToast'
+import VButton from '@/components/ui/VButton.vue'
+import VTextField from '@/components/ui/VTextField.vue'
 
 const userStore = useUserStore()
 const { success } = useToast()
@@ -135,86 +137,58 @@ function toggleGoalComplete(goalId: string) {
       <v-window-item value="profile">
         <v-row class="mt-4">
           <v-col cols="12" lg="8">
-            <v-card elevation="2">
-              <v-card-title class="text-h5 font-weight-bold pa-6 bg-surface">
-                Edit Profile
-              </v-card-title>
-              <v-divider />
+            <v-card>
+              <v-card-title class="text-h6 pa-6 pb-0">Edit Profile</v-card-title>
               <v-card-text class="pa-6">
-                <v-form @submit.prevent="handleSaveProfile">
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="profileForm.name"
-                        label="Full Name"
-                        prepend-inner-icon="mdi-account"
-                        variant="outlined"
-                        density="comfortable"
-                        hide-details="auto"
-                        clearable
-                      />
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="profileForm.email"
-                        label="Email"
-                        type="email"
-                        prepend-inner-icon="mdi-email"
-                        variant="outlined"
-                        density="comfortable"
-                        hide-details="auto"
-                        clearable
-                      />
-                    </v-col>
-                    <v-col cols="12">
-                      <v-textarea
-                        v-model="profileForm.bio"
-                        label="Bio"
-                        variant="outlined"
-                        rows="3"
-                        density="comfortable"
-                        hide-details="auto"
-                        auto-grow
-                        no-resize
-                        clearable
-                      />
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="profileForm.location"
-                        label="Location"
-                        prepend-inner-icon="mdi-map-marker"
-                        variant="outlined"
-                        density="comfortable"
-                        hide-details="auto"
-                        clearable
-                      />
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="profileForm.website"
-                        label="Website"
-                        prepend-inner-icon="mdi-web"
-                        variant="outlined"
-                        density="comfortable"
-                        hide-details="auto"
-                        clearable
-                      />
-                    </v-col>
-                  </v-row>
-
-                  <v-btn
-                    type="submit"
-                    color="primary"
-                    class="mt-6"
-                    size="large"
-                    elevation="0"
-                    @click="handleSaveProfile"
-                  >
-                    Save Changes
-                  </v-btn>
-                </v-form>
+                <v-row dense>
+                  <v-col cols="12" sm="6" class="mb-3">
+                    <VTextField
+                      v-model="profileForm.name"
+                      label="Full Name"
+                      prepend-inner-icon="mdi-account"
+                    />
+                  </v-col>
+                  <v-col cols="12" sm="6" class="mb-3">
+                    <VTextField
+                      v-model="profileForm.email"
+                      label="Email"
+                      type="email"
+                      prepend-inner-icon="mdi-email"
+                    />
+                  </v-col>
+                  <v-col cols="12" class="mb-3">
+                    <v-textarea
+                      v-model="profileForm.bio"
+                      label="Bio"
+                      placeholder="Tell us about yourself..."
+                      variant="outlined"
+                      density="comfortable"
+                      rows="4"
+                      no-resize
+                    />
+                  </v-col>
+                  <v-col cols="12" sm="6" class="mb-3">
+                    <VTextField
+                      v-model="profileForm.location"
+                      label="Location"
+                      prepend-inner-icon="mdi-map-marker"
+                    />
+                  </v-col>
+                  <v-col cols="12" sm="6" class="mb-3">
+                    <VTextField
+                      v-model="profileForm.website"
+                      label="Website"
+                      prepend-inner-icon="mdi-web"
+                    />
+                  </v-col>
+                </v-row>
               </v-card-text>
+              <v-divider />
+              <v-card-actions class="pa-6">
+                <VButton size="large" min-width="160" height="44" @click="handleSaveProfile">
+                  Save Changes
+                </VButton>
+              </v-card-actions>
             </v-card>
           </v-col>
         </v-row>
@@ -286,9 +260,7 @@ function toggleGoalComplete(goalId: string) {
               </v-card-text>
               <v-divider />
               <v-card-actions class="pa-6">
-                <v-btn color="primary" class="px-8" height="44" @click="handleSaveNotifications">
-                  Save Preferences
-                </v-btn>
+                <VButton height="44" @click="handleSaveNotifications"> Save Preferences </VButton>
               </v-card-actions>
             </v-card>
           </v-col>
@@ -304,25 +276,17 @@ function toggleGoalComplete(goalId: string) {
               <v-card-text>
                 <v-row>
                   <v-col cols="12" sm="8">
-                    <v-text-field
+                    <VTextField
                       v-model="newGoal"
                       label="What do you want to achieve?"
-                      variant="outlined"
                       density="comfortable"
-                      hide-details
                       @keyup.enter="addGoal"
                     />
                   </v-col>
                   <v-col cols="12" sm="4">
-                    <v-btn
-                      color="primary"
-                      block
-                      size="large"
-                      @click="addGoal"
-                      :disabled="!newGoal.trim()"
-                    >
+                    <VButton block size="large" @click="addGoal" :disabled="!newGoal.trim()">
                       Add Goal
-                    </v-btn>
+                    </VButton>
                   </v-col>
                 </v-row>
               </v-card-text>
@@ -360,15 +324,15 @@ function toggleGoalComplete(goalId: string) {
                         <span class="text-caption">Progress: {{ goal.progress }}%</span>
                       </v-list-item-subtitle>
                       <template v-slot:append>
-                        <v-btn
-                          icon
+                        <VButton
+                          :icon="true"
                           variant="text"
                           color="error"
                           size="small"
                           @click="removeGoal(goal.id)"
                         >
                           <v-icon>mdi-delete</v-icon>
-                        </v-btn>
+                        </VButton>
                       </template>
                     </v-list-item>
                     <v-divider v-if="index < userStore.learningGoals.length - 1" />
@@ -426,24 +390,9 @@ function toggleGoalComplete(goalId: string) {
 </template>
 
 <style scoped>
-/* Ensure proper Vuetify styling */
-:deep(.v-field__prepend-inner) {
-  padding-top: 8px;
-}
-
-:deep(.v-field__clearable) {
-  padding-top: 8px;
-}
-
-/* Fix textarea clear button alignment */
-:deep(.v-textarea .v-field__clearable) {
-  align-self: flex-start;
-  margin-top: 12px;
-}
-
-/* Ensure buttons have proper styling */
-.v-btn {
-  text-transform: none;
-  letter-spacing: normal;
+/* Remove any text transformation from buttons */
+:deep(.v-btn) {
+  text-transform: none !important;
+  letter-spacing: normal !important;
 }
 </style>

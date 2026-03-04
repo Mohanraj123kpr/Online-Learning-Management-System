@@ -5,6 +5,7 @@ import { useCoursesStore } from '@/stores/courses'
 import { useToast } from '@/composables/useToast'
 import LessonList from '@/components/LessonList.vue'
 import ReviewSection from '@/components/ReviewSection.vue'
+import VButton from '@/components/ui/VButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -67,7 +68,7 @@ function handleEnroll() {
       <v-col cols="12">
         <v-card class="text-center pa-12">
           <h2 class="text-h4 mb-4">Course not found</h2>
-          <v-btn color="primary" to="/catalog">Browse Courses</v-btn>
+          <VButton to="/catalog">Browse Courses</VButton>
         </v-card>
       </v-col>
     </v-row>
@@ -75,9 +76,9 @@ function handleEnroll() {
     <!-- Course Content -->
     <div v-else>
       <!-- Back Button -->
-      <v-btn variant="text" prepend-icon="mdi-chevron-left" to="/catalog" class="mb-4">
+      <VButton variant="text" prepend-icon="mdi-chevron-left" to="/catalog">
         Back to Catalog
-      </v-btn>
+      </VButton>
 
       <v-row>
         <!-- Main Content -->
@@ -220,16 +221,15 @@ function handleEnroll() {
                   </p>
                 </div>
 
-                <v-btn
+                <VButton
                   v-if="firstIncompleteLesson"
-                  color="primary"
                   size="large"
                   block
                   prepend-icon="mdi-play"
                   :to="`/course/${course.id}/lesson/${firstIncompleteLesson.id}`"
                 >
                   Continue Learning
-                </v-btn>
+                </VButton>
               </div>
 
               <!-- Not Enrolled State -->
@@ -239,7 +239,7 @@ function handleEnroll() {
                   <p class="text-caption text-medium-emphasis">One-time payment</p>
                 </div>
 
-                <v-btn color="primary" size="large" block @click="handleEnroll"> Enroll Now </v-btn>
+                <VButton size="large" block @click="handleEnroll"> Enroll Now </VButton>
 
                 <p class="text-center text-caption text-medium-emphasis mt-2">
                   30-day money-back guarantee

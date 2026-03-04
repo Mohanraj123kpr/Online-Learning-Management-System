@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useCoursesStore } from '@/stores/courses'
 import VCourseCard from '@/components/ui/VCourseCard.vue'
 import VStatsCard from '@/components/ui/VStatsCard.vue'
+import VButton from '@/components/ui/VButton.vue'
 import ProgressChart from '@/components/ProgressChart.vue'
 
 const router = useRouter()
@@ -97,7 +98,7 @@ function handleContinue(courseId: string) {
       <v-col cols="12">
         <div class="d-flex align-center justify-space-between mb-4">
           <h2 class="text-h5 font-weight-bold">Continue Learning</h2>
-          <v-btn variant="text" color="primary" to="/my-learning">View all</v-btn>
+          <VButton variant="text" to="/my-learning">View all</VButton>
         </div>
       </v-col>
       <v-col v-for="course in enrolledCourses" :key="course.id" cols="12" sm="6" lg="4">
@@ -115,7 +116,7 @@ function handleContinue(courseId: string) {
       <v-col cols="12">
         <div class="d-flex align-center justify-space-between mb-4">
           <h2 class="text-h5 font-weight-bold">Recommended for You</h2>
-          <v-btn variant="text" color="primary" to="/catalog">Browse all</v-btn>
+          <VButton variant="text" to="/catalog">Browse all</VButton>
         </div>
       </v-col>
       <v-col v-for="course in recommendedCourses" :key="course.id" cols="12" sm="6" lg="4">

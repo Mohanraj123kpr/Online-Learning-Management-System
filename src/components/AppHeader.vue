@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
+import VButton from '@/components/ui/VButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -49,7 +50,7 @@ function handleLogout() {
     <!-- Desktop Navigation -->
     <template v-slot:append>
       <div class="d-none d-md-flex align-center">
-        <v-btn
+        <VButton
           v-for="item in navItems"
           :key="item.path"
           :to="item.path"
@@ -59,7 +60,7 @@ function handleLogout() {
         >
           <v-icon start>{{ item.icon }}</v-icon>
           {{ item.title }}
-        </v-btn>
+        </VButton>
       </div>
 
       <!-- Search -->
@@ -79,12 +80,12 @@ function handleLogout() {
       <!-- Profile Menu -->
       <v-menu v-model="profileMenu" :close-on-content-click="false" location="bottom">
         <template v-slot:activator="{ props }">
-          <v-btn icon v-bind="props">
+          <VButton :icon="true" variant="text" v-bind="props">
             <v-avatar size="36">
               <v-img v-if="userStore.currentUser.avatar" :src="userStore.currentUser.avatar" />
               <span v-else>{{ userStore.userInitials }}</span>
             </v-avatar>
-          </v-btn>
+          </VButton>
         </template>
 
         <v-card min-width="250">

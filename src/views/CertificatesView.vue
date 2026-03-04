@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useCoursesStore } from '@/stores/courses'
 import CertificateModal from '@/components/CertificateModal.vue'
+import VButton from '@/components/ui/VButton.vue'
 import type { Certificate } from '@/types'
 
 const coursesStore = useCoursesStore()
@@ -59,16 +60,15 @@ function formatDate(date: Date): string {
           <v-divider />
 
           <v-card-actions>
-            <v-btn
+            <VButton
               variant="text"
-              color="primary"
               prepend-icon="mdi-eye"
               @click.stop="handleViewCertificate(certificate)"
             >
               View
-            </v-btn>
-            <v-btn variant="text" color="primary" prepend-icon="mdi-download"> Download </v-btn>
-            <v-btn variant="text" color="primary" prepend-icon="mdi-share-variant"> Share </v-btn>
+            </VButton>
+            <VButton variant="text" prepend-icon="mdi-download"> Download </VButton>
+            <VButton variant="text" prepend-icon="mdi-share-variant"> Share </VButton>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -83,7 +83,7 @@ function formatDate(date: Date): string {
           <p class="text-body-1 text-medium-emphasis mb-4">
             Complete a course to earn your first certificate
           </p>
-          <v-btn color="primary" to="/my-learning">View My Courses</v-btn>
+          <VButton to="/my-learning">View My Courses</VButton>
         </v-card>
       </v-col>
     </v-row>

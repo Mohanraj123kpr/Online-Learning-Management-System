@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Course } from '@/types'
+import VButton from '@/components/ui/VButton.vue'
 
 interface Props {
   course: Course
@@ -78,12 +79,12 @@ const emit = defineEmits<{
     </v-card-text>
 
     <v-card-actions>
-      <v-btn v-if="!enrolled" color="primary" variant="flat" block @click.stop="emit('enroll')">
+      <VButton v-if="!enrolled" variant="flat" block @click.stop="emit('enroll')">
         Enroll Now
-      </v-btn>
-      <v-btn v-else color="primary" variant="flat" block @click.stop="emit('continue')">
+      </VButton>
+      <VButton v-else variant="flat" block @click.stop="emit('continue')">
         Continue Learning
-      </v-btn>
+      </VButton>
     </v-card-actions>
   </v-card>
 </template>

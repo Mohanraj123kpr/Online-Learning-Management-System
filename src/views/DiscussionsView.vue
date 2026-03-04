@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDiscussionsStore } from '@/stores/discussions'
+import VButton from '@/components/ui/VButton.vue'
+import VTextField from '@/components/ui/VTextField.vue'
 import type { DiscussionFilter, DiscussionSort } from '@/types/discussion'
 
 const router = useRouter()
@@ -82,14 +84,9 @@ function formatTimeAgo(date: Date): string {
             <h1 class="text-h3 font-weight-bold mb-2">Discussions</h1>
             <p class="text-body-1 text-medium-emphasis">Ask questions and share knowledge</p>
           </div>
-          <v-btn
-            color="primary"
-            size="large"
-            prepend-icon="mdi-plus"
-            @click="showNewDiscussionDialog = true"
-          >
+          <VButton size="large" prepend-icon="mdi-plus" @click="showNewDiscussionDialog = true">
             New Discussion
-          </v-btn>
+          </VButton>
         </div>
       </v-col>
     </v-row>
@@ -100,11 +97,10 @@ function formatTimeAgo(date: Date): string {
         <v-card>
           <v-card-text>
             <!-- Search -->
-            <v-text-field
+            <VTextField
               v-model="searchQuery"
               label="Search discussions"
               prepend-inner-icon="mdi-magnify"
-              variant="outlined"
               density="comfortable"
               hide-details
               clearable
@@ -166,25 +162,25 @@ function formatTimeAgo(date: Date): string {
             <v-row>
               <!-- Vote Section -->
               <v-col cols="auto" class="d-flex flex-column align-center">
-                <v-btn
-                  icon
+                <VButton
+                  :icon="true"
                   size="small"
                   variant="text"
                   color="grey-darken-1"
                   @click.stop="handleVote(discussion.id, 1)"
                 >
                   <v-icon>mdi-chevron-up</v-icon>
-                </v-btn>
+                </VButton>
                 <span class="text-h6 font-weight-bold my-1">{{ discussion.votes }}</span>
-                <v-btn
-                  icon
+                <VButton
+                  :icon="true"
                   size="small"
                   variant="text"
                   color="grey-darken-1"
                   @click.stop="handleVote(discussion.id, -1)"
                 >
                   <v-icon>mdi-chevron-down</v-icon>
-                </v-btn>
+                </VButton>
               </v-col>
 
               <!-- Content -->
@@ -257,14 +253,9 @@ function formatTimeAgo(date: Date): string {
           <v-icon size="80" color="grey-lighten-1" class="mb-4">mdi-forum-outline</v-icon>
           <h3 class="text-h5 mb-2">No discussions found</h3>
           <p class="text-body-1 text-medium-emphasis mb-4">Be the first to start a discussion!</p>
-          <v-btn
-            color="primary"
-            size="large"
-            prepend-icon="mdi-plus"
-            @click="showNewDiscussionDialog = true"
-          >
+          <VButton size="large" prepend-icon="mdi-plus" @click="showNewDiscussionDialog = true">
             Start a Discussion
-          </v-btn>
+          </VButton>
         </v-card>
       </v-col>
     </v-row>

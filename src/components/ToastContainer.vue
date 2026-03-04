@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import VButton from '@/components/ui/VButton.vue'
 
 // Simple toast state management
 const toasts = ref<Array<{ id: number; message: string; type: string }>>([])
@@ -51,7 +52,9 @@ function getColor(type: string) {
     >
       {{ toast.message }}
       <template v-slot:actions>
-        <v-btn icon="mdi-close" size="small" variant="text" @click="removeToast(toast.id)" />
+        <VButton :icon="true" size="small" variant="text" @click="removeToast(toast.id)">
+          <v-icon>mdi-close</v-icon>
+        </VButton>
       </template>
     </v-snackbar>
   </div>

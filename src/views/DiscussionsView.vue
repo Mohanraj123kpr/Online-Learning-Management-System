@@ -2,15 +2,88 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDiscussionsStore } from '@/stores/discussions'
+import { useCoursesStore } from '@/stores/courses'
+import { useUserStore } from '@/stores/user'
+import { useToast } from '@/composables/useToast'
 import VButton from '@/components/ui/VButton.vue'
 import VTextField from '@/components/ui/VTextField.vue'
 import type { DiscussionFilter, DiscussionSort } from '@/types/discussion'
 
 const router = useRouter()
 const discussionsStore = useDiscussionsStore()
+const coursesStore = useCoursesStore()
+const userStore = useUserStore()
+const { success } = useToast()
 
 const searchQuery = ref('')
 const showNewDiscussionDialog = ref(false)
+
+// New discussion form
+const newDiscussion = ref({
+  title: '',
+  content: '',
+  category: 'question' as 'question' | 'discussion' | 'announcement',
+  courseId: '',
+  tags: '',
+})
+
+const categoryOptions = [
+  { title: 'Question', value: 'question' },
+  { title: 'Discussion', value: 'discussion' },
+  { title: 'Announcement', value: 'announcement' },
+]
+
+const courseOptions = computed(() =>
+  coursesStore.courses.map((c) => ({ title: c.title, value: c.id })),
+)
+
+const isFormValid = computed(
+  () =>
+    newDiscussion.value.title.trim() &&
+    newDiscussion.value.content.trim() &&
+    newDiscussion.value.courseId,
+)
+
+function resetForm() {
+  newDiscussion.value = {
+    title: '',
+    content: '',
+    category: 'question',
+    courseId: '',
+    tags: '',
+  }
+}
+
+function closeDialog() {
+  showNewDiscussionDialog.value = false
+  resetForm()
+}
+
+function handleCreateDiscussion() {
+  if (!isFormValid.value) return
+
+  const tags = newDiscussion.value.tags
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean)
+
+  discussionsStore.createDiscussion({
+    courseId: newDiscussion.value.courseId,
+    userId: userStore.currentUser.id,
+    userName: userStore.currentUser.name,
+    userAvatar: userStore.currentUser.avatar,
+    title: newDiscussion.value.title,
+    content: newDiscussion.value.content,
+    category: newDiscussion.value.category,
+    tags,
+    isResolved: false,
+    isPinned: false,
+  })
+
+  showNewDiscussionDialog.value = false
+  resetForm()
+  success('Discussion created! 🎉')
+}
 
 const filters: { value: DiscussionFilter; label: string; icon: string }[] = [
   { value: 'all', label: 'All Posts', icon: 'mdi-forum' },
@@ -259,6 +332,86 @@ function formatTimeAgo(date: Date): string {
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- New Discussion Dialog -->
+    <v-dialog v-model="showNewDiscussionDialog" max-width="700" persistent>
+      <v-card>
+        <v-card-title class="d-flex align-center justify-space-between pa-6 pb-2">
+          <span class="text-h5 font-weight-bold">New Discussion</span>
+          <v-btn icon="mdi-close" variant="text" size="small" @click="closeDialog" />
+        </v-card-title>
+
+        <v-card-text class="pa-6">
+          <v-row>
+            <v-col cols="12">
+              <VTextField
+                v-model="newDiscussion.title"
+                label="Title"
+                placeholder="What's your question or topic?"
+                prepend-inner-icon="mdi-format-title"
+              />
+            </v-col>
+
+            <v-col cols="12" sm="6">
+              <v-select
+                v-model="newDiscussion.category"
+                :items="categoryOptions"
+                item-title="title"
+                item-value="value"
+                label="Category"
+                variant="outlined"
+                density="comfortable"
+                prepend-inner-icon="mdi-tag"
+              />
+            </v-col>
+
+            <v-col cols="12" sm="6">
+              <v-select
+                v-model="newDiscussion.courseId"
+                :items="courseOptions"
+                item-title="title"
+                item-value="value"
+                label="Course"
+                variant="outlined"
+                density="comfortable"
+                prepend-inner-icon="mdi-book-open-variant"
+              />
+            </v-col>
+
+            <v-col cols="12">
+              <v-textarea
+                v-model="newDiscussion.content"
+                label="Content"
+                placeholder="Describe your question or topic in detail..."
+                variant="outlined"
+                density="comfortable"
+                rows="5"
+                auto-grow
+              />
+            </v-col>
+
+            <v-col cols="12">
+              <VTextField
+                v-model="newDiscussion.tags"
+                label="Tags"
+                placeholder="e.g. react, javascript, css (comma separated)"
+                prepend-inner-icon="mdi-pound"
+              />
+            </v-col>
+          </v-row>
+        </v-card-text>
+
+        <v-divider />
+
+        <v-card-actions class="pa-6">
+          <v-spacer />
+          <VButton variant="outlined" color="grey-darken-1" @click="closeDialog"> Cancel </VButton>
+          <VButton :disabled="!isFormValid" @click="handleCreateDiscussion">
+            Post Discussion
+          </VButton>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 

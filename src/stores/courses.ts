@@ -78,6 +78,23 @@ export const useCoursesStore = defineStore('courses', () => {
     return progress ? progress.completedLessons.includes(lessonId) : false
   }
 
+  // Video Progress Actions
+  function saveVideoTimestamp(courseId: string, lessonId: string, timestamp: number) {
+    const progress = userProgress.value.find((p) => p.courseId === courseId)
+    if (progress) {
+      if (!progress.videoTimestamps) {
+        progress.videoTimestamps = {}
+      }
+      progress.videoTimestamps[lessonId] = timestamp
+      progress.lastAccessedLesson = lessonId
+    }
+  }
+
+  function getVideoTimestamp(courseId: string, lessonId: string): number {
+    const progress = userProgress.value.find((p) => p.courseId === courseId)
+    return progress?.videoTimestamps?.[lessonId] ?? 0
+  }
+
   // Notes Actions
   function addNote(courseId: string, lessonId: string, content: string, timestamp: number) {
     const note: Note = {
@@ -176,6 +193,8 @@ export const useCoursesStore = defineStore('courses', () => {
     enrollInCourse,
     updateProgress,
     isLessonCompleted,
+    saveVideoTimestamp,
+    getVideoTimestamp,
     addNote,
     deleteNote,
     getNotesByLesson,

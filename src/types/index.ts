@@ -44,6 +44,7 @@ export interface UserProgress {
   completedLessons: string[]
   lastAccessedLesson?: string
   progress: number
+  videoTimestamps?: Record<string, number>
 }
 
 export interface QuizQuestion {

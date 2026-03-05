@@ -136,19 +136,19 @@ function toggleGoalComplete(goalId: string) {
       <!-- Profile Tab -->
       <v-window-item value="profile">
         <v-row class="mt-4">
-          <v-col cols="12" lg="8">
+          <v-col cols="12">
             <v-card>
               <v-card-title class="text-h6 pa-6 pb-0">Edit Profile</v-card-title>
               <v-card-text class="pa-6">
-                <v-row dense>
-                  <v-col cols="12" sm="6" class="mb-3">
+                <v-row>
+                  <v-col cols="12" md="6">
                     <VTextField
                       v-model="profileForm.name"
                       label="Full Name"
                       prepend-inner-icon="mdi-account"
                     />
                   </v-col>
-                  <v-col cols="12" sm="6" class="mb-3">
+                  <v-col cols="12" md="6">
                     <VTextField
                       v-model="profileForm.email"
                       label="Email"
@@ -156,7 +156,7 @@ function toggleGoalComplete(goalId: string) {
                       prepend-inner-icon="mdi-email"
                     />
                   </v-col>
-                  <v-col cols="12" class="mb-3">
+                  <v-col cols="12">
                     <v-textarea
                       v-model="profileForm.bio"
                       label="Bio"
@@ -165,16 +165,17 @@ function toggleGoalComplete(goalId: string) {
                       density="comfortable"
                       rows="4"
                       no-resize
+                      auto-grow
                     />
                   </v-col>
-                  <v-col cols="12" sm="6" class="mb-3">
+                  <v-col cols="12" md="6">
                     <VTextField
                       v-model="profileForm.location"
                       label="Location"
                       prepend-inner-icon="mdi-map-marker"
                     />
                   </v-col>
-                  <v-col cols="12" sm="6" class="mb-3">
+                  <v-col cols="12" md="6">
                     <VTextField
                       v-model="profileForm.website"
                       label="Website"
@@ -185,6 +186,7 @@ function toggleGoalComplete(goalId: string) {
               </v-card-text>
               <v-divider />
               <v-card-actions class="pa-6">
+                <v-spacer />
                 <VButton size="large" min-width="160" height="44" @click="handleSaveProfile">
                   Save Changes
                 </VButton>

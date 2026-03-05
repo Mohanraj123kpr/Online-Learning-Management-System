@@ -23,6 +23,18 @@ const notesPanelRef = ref<InstanceType<typeof NotesPanel> | null>(null)
 const showCertificateModal = ref(false)
 const earnedCertificate = ref<any>(null)
 
+const savedVideoTime = computed(() => coursesStore.getVideoTimestamp(courseId, lessonId))
+
+let saveThrottleTimer: ReturnType<typeof setTimeout> | null = null
+
+const handleVideoTimeUpdate = (time: number) => {
+  if (saveThrottleTimer) return
+  saveThrottleTimer = setTimeout(() => {
+    coursesStore.saveVideoTimestamp(courseId, lessonId, time)
+    saveThrottleTimer = null
+  }, 5000)
+}
+
 const course = computed(() => coursesStore.getCourseById(courseId))
 
 const allLessons = computed(() => {
@@ -147,7 +159,12 @@ const handleDeleteNote = (noteId: string) => {
         <div class="overflow-hidden rounded-lg border bg-white shadow-sm">
           <!-- Video Type -->
           <div v-if="currentLesson.type === 'video' && currentLesson.videoUrl">
-            <VideoPlayer ref="videoPlayerRef" :video-url="currentLesson.videoUrl" />
+            <VideoPlayer
+              ref="videoPlayerRef"
+              :video-url="currentLesson.videoUrl"
+              :start-time="savedVideoTime"
+              @time-update="handleVideoTimeUpdate"
+            />
           </div>
 
           <!-- Reading Type -->

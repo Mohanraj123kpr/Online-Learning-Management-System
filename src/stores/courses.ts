@@ -1,16 +1,19 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { mockCourses, mockUserProgress, mockNotes, mockCertificates } from '@/data/mockData'
-import type { Course, Note, Certificate, Review } from '@/types'
+import type { Course, Note, Certificate, Review, UserProgress } from '@/types'
+import { useOrganizationStore } from './organization'
 
 export const useCoursesStore = defineStore('courses', () => {
-  // State
-  const courses = ref<Course[]>(mockCourses)
-  const userProgress = ref(mockUserProgress)
-  const notes = ref<Note[]>(mockNotes)
-  const certificates = ref<Certificate[]>(mockCertificates)
+  const orgStore = useOrganizationStore()
 
-  // Getters
+  // State - all data comes from backend based on tenant
+  const courses = ref<Course[]>([])
+  const userProgress = ref<UserProgress[]>([])
+  const notes = ref<Note[]>([])
+  const certificates = ref<Certificate[]>([])
+  const isLoading = ref(false)
+
+  // Getters - no filtering needed, backend returns only tenant's data
   const enrolledCourses = computed(() => courses.value.filter((c) => c.enrolled))
 
   const completedCourses = computed(() => enrolledCourses.value.filter((c) => c.progress === 100))
@@ -23,6 +26,24 @@ export const useCoursesStore = defineStore('courses', () => {
     return courses.value.find((c) => c.id === id)
   })
 
+  // Get mandatory courses with metadata from org store
+  const mandatoryCourses = computed(() => {
+    if (!orgStore.isOrgContext) return []
+
+    return orgStore.mandatoryCourses
+      .map((oc) => {
+        const course = courses.value.find((c) => c.id === oc.courseId)
+        if (!course) return null
+
+        return {
+          ...course,
+          dueDate: oc.dueDate,
+          mandatory: true,
+        }
+      })
+      .filter(Boolean)
+  })
+
   const overallProgress = computed(() => {
     if (enrolledCourses.value.length === 0) return 0
     return Math.round(
@@ -31,7 +52,32 @@ export const useCoursesStore = defineStore('courses', () => {
     )
   })
 
-  // Actions
+  // Actions - all interact with backend
+  async function loadCourses() {
+    if (!orgStore.currentOrg) return
+
+    isLoading.value = true
+    try {
+      // TODO: Replace with actual API call
+      const data = await mockFetchOrgCourses(orgStore.currentOrg.id)
+      courses.value = data.courses
+      userProgress.value = data.userProgress
+      notes.value = data.notes
+      certificates.value = data.certificates
+    } catch (error) {
+      console.error('Failed to load courses:', error)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  function clearCourses() {
+    courses.value = []
+    userProgress.value = []
+    notes.value = []
+    certificates.value = []
+  }
+
   function enrollInCourse(courseId: string) {
     const course = courses.value.find((c) => c.id === courseId)
     if (course) {
@@ -42,6 +88,8 @@ export const useCoursesStore = defineStore('courses', () => {
         completedLessons: [],
         progress: 0,
       })
+
+      // TODO: Call backend API to persist enrollment
     }
   }
 
@@ -71,6 +119,8 @@ export const useCoursesStore = defineStore('courses', () => {
         }
       })
     })
+
+    // TODO: Call backend API to persist progress
   }
 
   function isLessonCompleted(courseId: string, lessonId: string): boolean {
@@ -87,6 +137,8 @@ export const useCoursesStore = defineStore('courses', () => {
       }
       progress.videoTimestamps[lessonId] = timestamp
       progress.lastAccessedLesson = lessonId
+
+      // TODO: Call backend API to persist timestamp
     }
   }
 
@@ -106,12 +158,16 @@ export const useCoursesStore = defineStore('courses', () => {
       createdAt: new Date(),
     }
     notes.value.push(note)
+
+    // TODO: Call backend API to persist note
   }
 
   function deleteNote(noteId: string) {
     const index = notes.value.findIndex((n) => n.id === noteId)
     if (index !== -1) {
       notes.value.splice(index, 1)
+
+      // TODO: Call backend API to delete note
     }
   }
 
@@ -124,6 +180,8 @@ export const useCoursesStore = defineStore('courses', () => {
     const course = courses.value.find((c) => c.id === courseId)
     if (course) {
       course.bookmarked = !course.bookmarked
+
+      // TODO: Call backend API to persist bookmark
     }
   }
 
@@ -149,6 +207,8 @@ export const useCoursesStore = defineStore('courses', () => {
       // Recalculate average rating
       const avgRating = course.reviews.reduce((sum, r) => sum + r.rating, 0) / course.reviews.length
       course.rating = Math.round(avgRating * 10) / 10
+
+      // TODO: Call backend API to persist review
     }
   }
 
@@ -158,6 +218,8 @@ export const useCoursesStore = defineStore('courses', () => {
       const review = course.reviews.find((r) => r.id === reviewId)
       if (review) {
         review.helpful++
+
+        // TODO: Call backend API to persist helpful count
       }
     }
   }
@@ -172,9 +234,11 @@ export const useCoursesStore = defineStore('courses', () => {
         courseName: course.title,
         studentName: 'Current User',
         completionDate: new Date(),
-        instructor: course.instructor,
+        instructor: course.instructor.name,
       }
       certificates.value.push(cert)
+
+      // TODO: Call backend API to generate certificate
       return cert
     }
     return null
@@ -185,11 +249,15 @@ export const useCoursesStore = defineStore('courses', () => {
     userProgress,
     notes,
     certificates,
+    isLoading,
     enrolledCourses,
     completedCourses,
     inProgressCourses,
+    mandatoryCourses,
     getCourseById,
     overallProgress,
+    loadCourses,
+    clearCourses,
     enrollInCourse,
     updateProgress,
     isLessonCompleted,
@@ -204,3 +272,21 @@ export const useCoursesStore = defineStore('courses', () => {
     generateCertificate,
   }
 })
+
+// Mock API function - replace with actual backend call
+async function mockFetchOrgCourses(organizationId: string) {
+  await new Promise((resolve) => setTimeout(resolve, 500))
+
+  // Import mock data based on org
+  const { mockCourses, mockUserProgress, mockNotes, mockCertificates } =
+    await import('@/data/mockData')
+
+  // In real implementation, backend would return only this org's data
+  // For now, filter mock data by organizationId
+  return {
+    courses: mockCourses.filter((c) => c.organizationId === organizationId),
+    userProgress: mockUserProgress,
+    notes: mockNotes,
+    certificates: mockCertificates,
+  }
+}

@@ -15,6 +15,11 @@ export interface User {
   preferences: UserPreferences
   stats: UserStats
   createdAt: Date
+
+  // Multi-tenant fields (optional for backward compat)
+  organizationId?: string
+  orgRole?: import('./organization').OrgRole
+  department?: string
 }
 
 export interface UserPreferences {

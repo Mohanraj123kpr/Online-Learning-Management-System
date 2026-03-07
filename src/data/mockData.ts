@@ -1,47 +1,4 @@
-interface Course {
-  id: string
-  title: string
-  description: string
-  instructor: string
-  instructorImage: string
-  thumbnail: string
-  category: string
-  level: 'Beginner' | 'Intermediate' | 'Advanced'
-  duration: number
-  enrolledStudents: number
-  rating: number
-  modules: any[]
-  price?: number
-  enrolled?: boolean
-  progress?: number
-  bookmarked?: boolean
-  reviews?: any[]
-}
-
-interface UserProgress {
-  courseId: string
-  completedLessons: string[]
-  lastAccessedLesson?: string
-  progress: number
-}
-
-interface Note {
-  id: string
-  courseId: string
-  lessonId: string
-  content: string
-  timestamp: number
-  createdAt: Date
-}
-
-interface Certificate {
-  id: string
-  courseId: string
-  courseName: string
-  studentName: string
-  completionDate: Date
-  instructor: string
-}
+import type { Course, UserProgress, Note, Certificate } from '@/types'
 
 export const mockCourses: Course[] = [
   {
@@ -49,21 +6,25 @@ export const mockCourses: Course[] = [
     title: 'Complete Web Development Bootcamp',
     description:
       'Master HTML, CSS, JavaScript, React, Node.js, and more. Build real-world projects and launch your career as a full-stack developer.',
-    instructor: 'Sarah Johnson',
-    instructorImage:
-      'https://images.unsplash.com/photo-1758685845872-4edbf0e76014?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHRlYWNoaW5nJTIwcHJvZ3JhbW1pbmd8ZW58MXx8fHwxNzcyNjM2ODAzfDA&ixlib=rb-4.1.0&q=80&w=1080',
+    instructor: {
+      name: 'Sarah Johnson',
+      avatar:
+        'https://images.unsplash.com/photo-1758685845872-4edbf0e76014?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHRlYWNoaW5nJTIwcHJvZ3JhbW1pbmd8ZW58MXx8fHwxNzcyNjM2ODAzfDA&ixlib=rb-4.1.0&q=80&w=1080',
+    },
     thumbnail:
       'https://images.unsplash.com/photo-1742072594003-abf6ca86e154?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWIlMjBkZXZlbG9wbWVudCUyMGNvZGluZyUyMHNjcmVlbnxlbnwxfHx8fDE3NzI1NTU1Nzl8MA&ixlib=rb-4.1.0&q=80&w=1080',
     category: 'Development',
     level: 'Beginner',
     duration: '42h',
-    enrolledStudents: 15678,
     studentsEnrolled: 15678,
     rating: 4.8,
     enrolled: true,
     progress: 45,
     bookmarked: true,
     currentLesson: 'l3',
+    organizationId: 'org-1',
+    visibility: 'assigned',
+    createdBy: 'user-3',
     reviews: [
       {
         id: 'r1',
@@ -158,20 +119,24 @@ export const mockCourses: Course[] = [
     title: 'Data Science & Machine Learning',
     description:
       'Learn Python, statistics, data visualization, and machine learning algorithms. Work on real datasets and build predictive models.',
-    instructor: 'Dr. Michael Chen',
-    instructorImage:
-      'https://images.unsplash.com/photo-1684236685989-baafbf7bef95?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYWxlJTIwaW5zdHJ1Y3RvciUyMGV4cGVydHxlbnwxfHx8fDE3NzI2MzY4MDN8MA&ixlib=rb-4.1.0&q=80&w=1080',
+    instructor: {
+      name: 'Dr. Michael Chen',
+      avatar:
+        'https://images.unsplash.com/photo-1684236685989-baafbf7bef95?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYWxlJTIwaW5zdHJ1Y3RvciUyMGV4cGVydHxlbnwxfHx8fDE3NzI2MzY4MDN8MA&ixlib=rb-4.1.0&q=80&w=1080',
+    },
     thumbnail:
       'https://images.unsplash.com/photo-1718241905916-1f9786324de9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkYXRhJTIwc2NpZW5jZSUyMGFuYWx5dGljcyUyMGNvbXB1dGVyfGVufDF8fHx8MTc3MjYxMDk3MXww&ixlib=rb-4.1.0&q=80&w=1080',
     category: 'Data Science',
     level: 'Intermediate',
     duration: '56h',
-    enrolledStudents: 12450,
     studentsEnrolled: 12450,
     rating: 4.9,
     enrolled: true,
     progress: 20,
     currentLesson: 'l8',
+    organizationId: 'org-1',
+    visibility: 'assigned',
+    createdBy: 'user-3',
     modules: [],
   },
   {
@@ -179,18 +144,67 @@ export const mockCourses: Course[] = [
     title: 'UI/UX Design Masterclass',
     description:
       'Create beautiful, user-friendly interfaces. Learn design principles, wireframing, prototyping, and user research.',
-    instructor: 'Emily Rodriguez',
-    instructorImage:
-      'https://images.unsplash.com/photo-1629507208649-70919ca33793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHByb2Zlc3Npb25hbCUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MjYxOTcyMnww&ixlib=rb-4.1.0&q=80&w=1080',
+    instructor: {
+      name: 'Emily Rodriguez',
+      avatar:
+        'https://images.unsplash.com/photo-1629507208649-70919ca33793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHByb2Zlc3Npb25hbCUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MjYxOTcyMnww&ixlib=rb-4.1.0&q=80&w=1080',
+    },
     thumbnail:
       'https://images.unsplash.com/photo-1609921212029-bb5a28e60960?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmFwaGljJTIwZGVzaWduJTIwd29ya3NwYWNlfGVufDF8fHx8MTc3MjU1Nzc1OXww&ixlib=rb-4.1.0&q=80&w=1080',
     category: 'Design',
     level: 'Beginner',
     duration: '38h',
-    enrolledStudents: 9832,
     studentsEnrolled: 9832,
     rating: 4.7,
     enrolled: false,
+    organizationId: 'org-1',
+    visibility: 'assigned',
+    createdBy: 'user-3',
+    modules: [],
+  },
+  // Courses for org-2 (TechStart Inc)
+  {
+    id: '4',
+    title: 'Startup Fundamentals',
+    description:
+      'Learn how to build and scale a successful startup. From ideation to product-market fit.',
+    instructor: {
+      name: 'Alex Turner',
+      avatar:
+        'https://images.unsplash.com/photo-1684236685989-baafbf7bef95?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYWxlJTIwaW5zdHJ1Y3RvciUyMGV4cGVydHxlbnwxfHx8fDE3NzI2MzY4MDN8MA&ixlib=rb-4.1.0&q=80&w=1080',
+    },
+    thumbnail: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1080',
+    category: 'Business',
+    level: 'Beginner',
+    duration: '24h',
+    studentsEnrolled: 450,
+    rating: 4.6,
+    enrolled: false,
+    organizationId: 'org-2',
+    visibility: 'assigned',
+    createdBy: 'user-5',
+    modules: [],
+  },
+  {
+    id: '5',
+    title: 'Agile Project Management',
+    description:
+      'Master Agile methodologies, Scrum framework, and sprint planning for effective team collaboration.',
+    instructor: {
+      name: 'Maria Garcia',
+      avatar:
+        'https://images.unsplash.com/photo-1758685845872-4edbf0e76014?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHRlYWNoaW5nJTIwcHJvZ3JhbW1pbmd8ZW58MXx8fHwxNzcyNjM2ODAzfDA&ixlib=rb-4.1.0&q=80&w=1080',
+    },
+    thumbnail: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1080',
+    category: 'Management',
+    level: 'Intermediate',
+    duration: '18h',
+    studentsEnrolled: 320,
+    rating: 4.7,
+    enrolled: false,
+    organizationId: 'org-2',
+    visibility: 'assigned',
+    createdBy: 'user-5',
     modules: [],
   },
 ]

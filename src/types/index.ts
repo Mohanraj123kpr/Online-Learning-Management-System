@@ -37,6 +37,11 @@ export interface Course {
   bookmarked?: boolean
   reviews?: Review[]
   currentLesson?: string
+
+  // Multi-tenant fields
+  organizationId?: string // which org owns/created this course
+  visibility?: 'public' | 'organization' | 'assigned' // who can see it
+  createdBy?: string // userId of the creator
 }
 
 export interface UserProgress {

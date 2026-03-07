@@ -1,23 +1,36 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useAuthStore } from '@/stores/auth'
+import { useOrganizationStore } from '@/stores/organization'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import VButton from '@/components/ui/VButton.vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const authStore = useAuthStore()
+const orgStore = useOrganizationStore()
 const drawer = ref(false)
 const profileMenu = ref(false)
 
-const navItems = [
-  { title: 'Dashboard', icon: 'mdi-view-dashboard', path: '/' },
-  { title: 'Browse Courses', icon: 'mdi-magnify', path: '/catalog' },
-  { title: 'My Learning', icon: 'mdi-book-open-variant', path: '/my-learning' },
-  { title: 'Certificates', icon: 'mdi-certificate', path: '/certificates' },
-  { title: 'Discussions', icon: 'mdi-forum', path: '/discussions' },
-]
+const navItems = computed(() => {
+  const items = [
+    { title: 'Dashboard', icon: 'mdi-view-dashboard', path: '/' },
+    { title: 'Browse Courses', icon: 'mdi-magnify', path: '/catalog' },
+    { title: 'My Learning', icon: 'mdi-book-open-variant', path: '/my-learning' },
+    { title: 'Certificates', icon: 'mdi-certificate', path: '/certificates' },
+    { title: 'Discussions', icon: 'mdi-forum', path: '/discussions' },
+  ]
+
+  // Add admin menu items if user has admin role
+  if (orgStore.isAdmin) {
+    items.push({ title: 'Admin', icon: 'mdi-shield-account', path: '/admin' })
+  }
+
+  return items
+})
 
 const isActive = (path: string) => route.path === path
 
@@ -26,8 +39,9 @@ function navigateToProfile() {
   profileMenu.value = false
 }
 
-function handleLogout() {
-  // In a real app, this would handle logout
+async function handleLogout() {
+  await authStore.logout()
+  router.push('/login')
   profileMenu.value = false
 }
 </script>
@@ -40,10 +54,20 @@ function handleLogout() {
     <!-- Logo -->
     <v-app-bar-title>
       <router-link to="/" class="d-flex align-center text-decoration-none">
-        <v-avatar color="primary" size="40" class="mr-2">
+        <v-avatar v-if="orgStore.currentOrg?.logo" size="40" class="mr-2">
+          <v-img :src="orgStore.currentOrg.logo" />
+        </v-avatar>
+        <v-avatar v-else color="primary" size="40" class="mr-2">
           <v-icon>mdi-school</v-icon>
         </v-avatar>
-        <span class="text-h6 font-weight-bold">LearnHub</span>
+        <div class="d-flex flex-column">
+          <span class="text-h6 font-weight-bold">
+            {{ orgStore.currentOrg?.name || 'LearnHub' }}
+          </span>
+          <span v-if="orgStore.currentOrg" class="text-caption text-grey">
+            {{ orgStore.userRole }}
+          </span>
+        </div>
       </router-link>
     </v-app-bar-title>
 
@@ -78,19 +102,20 @@ function handleLogout() {
       <ThemeToggle />
 
       <!-- Profile Menu -->
-      <v-menu v-model="profileMenu" :close-on-content-click="false" location="bottom">
+      <v-menu v-model="profileMenu" location="bottom">
         <template v-slot:activator="{ props }">
-          <VButton :icon="true" variant="text" v-bind="props">
+          <v-btn icon variant="text" v-bind="props">
             <v-avatar size="36">
-              <v-img v-if="userStore.currentUser.avatar" :src="userStore.currentUser.avatar" />
+              <v-img v-if="userStore.currentUser?.avatar" :src="userStore.currentUser.avatar" />
               <span v-else>{{ userStore.userInitials }}</span>
             </v-avatar>
-          </VButton>
+          </v-btn>
         </template>
 
         <v-card min-width="250">
           <v-list>
             <v-list-item
+              v-if="userStore.currentUser"
               :prepend-avatar="userStore.currentUser.avatar"
               :title="userStore.currentUser.name"
               :subtitle="userStore.currentUser.email"

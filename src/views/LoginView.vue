@@ -58,6 +58,13 @@
           <v-divider />
 
           <v-card-text class="text-center">
+            <p class="text-sm text-gray-600 mb-4">
+              Don't have an organization account?
+              <router-link to="/register" class="text-primary font-medium hover:underline">
+                Register your organization
+              </router-link>
+            </p>
+            <v-divider class="my-4" />
             <p class="text-sm text-gray-600">
               Demo credentials: <br />
               <strong>Admin:</strong>

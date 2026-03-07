@@ -487,6 +487,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useOrganizationStore } from '@/stores/organization'
 import { useCoursesStore } from '@/stores/courses'
 import { useToast } from '@/composables/useToast'
+import { api } from '@/services/api'
 
 const orgStore = useOrganizationStore()
 const coursesStore = useCoursesStore()
@@ -496,56 +497,16 @@ const activeTab = ref('employees')
 const employeeSearch = ref('')
 const showInviteDialog = ref(false)
 const showAssignCourseDialog = ref(false)
+const loading = ref(false)
 
-// Mock employees data
-const employees = ref([
-  {
-    id: 'user-1',
-    name: 'John Doe',
-    email: 'john.doe@acme.com',
-    role: 'admin',
-    department: 'Engineering',
-    avatar: 'https://images.unsplash.com/photo-1629507208649-70919ca33793?w=200',
-    active: true,
-    joinedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'user-2',
-    name: 'Jane Smith',
-    email: 'jane.smith@acme.com',
-    role: 'learner',
-    department: 'Marketing',
-    avatar: '',
-    active: true,
-    joinedAt: new Date('2024-02-01'),
-  },
-  {
-    id: 'user-3',
-    name: 'Mike Johnson',
-    email: 'mike.j@acme.com',
-    role: 'instructor',
-    department: 'Training',
-    avatar: '',
-    active: true,
-    joinedAt: new Date('2023-12-01'),
-  },
-  {
-    id: 'user-4',
-    name: 'Sarah Williams',
-    email: 'sarah.w@acme.com',
-    role: 'learner',
-    department: 'Engineering',
-    avatar: '',
-    active: true,
-    joinedAt: new Date('2024-03-10'),
-  },
-])
+// Employees data from API
+const employees = ref<any[]>([])
 
 const stats = ref({
-  totalEmployees: 4,
-  activeLearners: 3,
-  coursesAssigned: 3,
-  avgCompletion: 42,
+  totalEmployees: 0,
+  activeLearners: 0,
+  coursesAssigned: 0,
+  avgCompletion: 0,
 })
 
 const topCourses = ref([
@@ -649,71 +610,131 @@ function getCompletionColor(rate: number) {
   return 'error'
 }
 
+// Load employees from API
+async function loadEmployees() {
+  try {
+    loading.value = true
+    const data = await api.getOrganizationMembers()
+    employees.value = data
+  } catch (error) {
+    console.error('Failed to load employees:', error)
+    toast.error('Failed to load employees')
+  } finally {
+    loading.value = false
+  }
+}
+
+// Load analytics from API
+async function loadAnalytics() {
+  try {
+    const data = await api.getOrganizationAnalytics()
+    stats.value = {
+      totalEmployees: data.totalEmployees || 0,
+      activeLearners: data.activeLearners || 0,
+      coursesAssigned: data.coursesAssigned || 0,
+      avgCompletion: data.avgCompletion || 0,
+    }
+  } catch (error) {
+    console.error('Failed to load analytics:', error)
+  }
+}
+
 function editEmployee(employee: any) {
   toast.info(`Edit employee: ${employee.name}`)
   // TODO: Implement edit dialog
 }
 
-function confirmDeleteEmployee(employee: any) {
+async function confirmDeleteEmployee(employee: any) {
   if (confirm(`Are you sure you want to remove ${employee.name}?`)) {
-    const index = employees.value.findIndex((e) => e.id === employee.id)
-    if (index !== -1) {
-      employees.value.splice(index, 1)
+    try {
+      loading.value = true
+      await api.removeUser(employee.id)
+
+      // Remove from local list
+      const index = employees.value.findIndex((e) => e.id === employee.id)
+      if (index !== -1) {
+        employees.value.splice(index, 1)
+      }
+
       stats.value.totalEmployees--
       toast.success(`${employee.name} removed successfully`)
+    } catch (error: any) {
+      console.error('Failed to remove employee:', error)
+      toast.error(error.message || 'Failed to remove employee')
+    } finally {
+      loading.value = false
     }
   }
 }
 
-function sendInvite() {
-  // TODO: Call backend API to send invite
-  employees.value.push({
-    id: `user-${Date.now()}`,
-    name: inviteForm.value.name,
-    email: inviteForm.value.email,
-    role: inviteForm.value.role as any,
-    department: inviteForm.value.department,
-    avatar: '',
-    active: false,
-    joinedAt: new Date(),
-  })
+async function sendInvite() {
+  if (!inviteForm.value.email || !inviteForm.value.name) {
+    toast.error('Please fill in all required fields')
+    return
+  }
 
-  stats.value.totalEmployees++
-  toast.success(`Invitation sent to ${inviteForm.value.email}`)
+  try {
+    loading.value = true
+    await api.inviteUser({
+      email: inviteForm.value.email,
+      name: inviteForm.value.name,
+      role: inviteForm.value.role,
+      department: inviteForm.value.department,
+    })
 
-  showInviteDialog.value = false
-  inviteForm.value = { email: '', name: '', role: 'learner', department: '' }
+    toast.success(`Invitation sent to ${inviteForm.value.email}`)
+
+    // Reload employees list
+    await loadEmployees()
+    await loadAnalytics()
+
+    showInviteDialog.value = false
+    inviteForm.value = { email: '', name: '', role: 'learner', department: '' }
+  } catch (error: any) {
+    console.error('Failed to send invite:', error)
+    toast.error(error.message || 'Failed to send invitation')
+  } finally {
+    loading.value = false
+  }
 }
 
-function assignCourse() {
+async function assignCourse() {
   if (!assignCourseForm.value.courseId) {
     toast.error('Please select a course')
     return
   }
 
-  orgStore.assignCourse({
-    organizationId: orgStore.currentOrg!.id,
-    courseId: assignCourseForm.value.courseId,
-    assignedTo: assignCourseForm.value.assignedTo as 'all' | 'specific',
-    assignedDepartments:
-      assignCourseForm.value.assignedTo === 'specific'
-        ? assignCourseForm.value.departments
-        : undefined,
-    mandatory: assignCourseForm.value.mandatory,
-    dueDate: assignCourseForm.value.dueDate ? new Date(assignCourseForm.value.dueDate) : undefined,
-    addedBy: 'user-1',
-  })
+  try {
+    loading.value = true
+    await api.assignCourse({
+      courseId: assignCourseForm.value.courseId,
+      assignedTo: assignCourseForm.value.assignedTo,
+      assignedDepartments:
+        assignCourseForm.value.assignedTo === 'specific'
+          ? assignCourseForm.value.departments
+          : undefined,
+      mandatory: assignCourseForm.value.mandatory,
+      dueDate: assignCourseForm.value.dueDate || undefined,
+    })
 
-  stats.value.coursesAssigned++
-  toast.success('Course assigned successfully')
+    toast.success('Course assigned successfully')
 
-  showAssignCourseDialog.value = false
-  assignCourseForm.value = {
-    courseId: '',
-    assignedTo: 'all',
-    departments: [],
-    mandatory: false,
-    dueDate: '',
+    // Reload analytics
+    await loadAnalytics()
+
+    showAssignCourseDialog.value = false
+    assignCourseForm.value = {
+      courseId: '',
+      assignedTo: 'all',
+      departments: [],
+      mandatory: false,
+      dueDate: '',
+    }
+  } catch (error: any) {
+    console.error('Failed to assign course:', error)
+    toast.error(error.message || 'Failed to assign course')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -730,13 +751,28 @@ function unassignCourse(assignmentId: string) {
   }
 }
 
-function saveSettings() {
-  // TODO: Call backend API to save settings
-  toast.success('Settings saved successfully')
+async function saveSettings() {
+  try {
+    loading.value = true
+    await api.updateMyOrganization({
+      name: orgSettings.value.name,
+      settings: {
+        allowSelfEnrollment: orgSettings.value.allowSelfEnrollment,
+        requireApproval: orgSettings.value.requireApproval,
+      },
+    })
+
+    toast.success('Settings saved successfully')
+  } catch (error: any) {
+    console.error('Failed to save settings:', error)
+    toast.error(error.message || 'Failed to save settings')
+  } finally {
+    loading.value = false
+  }
 }
 
-onMounted(() => {
-  // Load admin data
-  // TODO: Fetch from backend
+onMounted(async () => {
+  // Load admin data from API
+  await Promise.all([loadEmployees(), loadAnalytics()])
 })
 </script>

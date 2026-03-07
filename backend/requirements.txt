@@ -1,0 +1,15 @@
+# FastAPI Backend Requirements
+# Install with: pip install -r requirements.txt
+
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+alembic
+python-jose[cryptography]
+bcrypt
+python-multipart
+pydantic
+pydantic-settings
+python-dotenv
+email-validator

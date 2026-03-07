@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { api } from '@/services/api'
 import type { Course, Note, Certificate, Review, UserProgress } from '@/types'
 import { useOrganizationStore } from './organization'
 
@@ -58,14 +59,28 @@ export const useCoursesStore = defineStore('courses', () => {
 
     isLoading.value = true
     try {
-      // TODO: Replace with actual API call
-      const data = await mockFetchOrgCourses(orgStore.currentOrg.id)
-      courses.value = data.courses
-      userProgress.value = data.userProgress
-      notes.value = data.notes
-      certificates.value = data.certificates
+      // Call backend API
+      const data = await api.getCourses()
+
+      // Backend might return array directly or object with courses property
+      if (Array.isArray(data)) {
+        courses.value = data
+      } else {
+        courses.value = data.courses || []
+        userProgress.value = data.userProgress || []
+        notes.value = data.notes || []
+        certificates.value = data.certificates || []
+      }
     } catch (error) {
       console.error('Failed to load courses:', error)
+      // Fallback to mock data for development
+      const mockData = await import('@/data/mockData')
+      courses.value = mockData.mockCourses.filter(
+        (c) => c.organizationId === orgStore.currentOrg?.id,
+      )
+      userProgress.value = mockData.mockUserProgress
+      notes.value = mockData.mockNotes
+      certificates.value = mockData.mockCertificates
     } finally {
       isLoading.value = false
     }
@@ -89,7 +104,16 @@ export const useCoursesStore = defineStore('courses', () => {
         progress: 0,
       })
 
-      // TODO: Call backend API to persist enrollment
+      // Call backend API
+      api.enrollInCourse(courseId).catch((error) => {
+        console.error('Failed to enroll in course:', error)
+        // Revert on error
+        course.enrolled = false
+        const index = userProgress.value.findIndex((p) => p.courseId === courseId)
+        if (index !== -1) {
+          userProgress.value.splice(index, 1)
+        }
+      })
     }
   }
 
@@ -120,7 +144,10 @@ export const useCoursesStore = defineStore('courses', () => {
       })
     })
 
-    // TODO: Call backend API to persist progress
+    // Call backend API
+    api.updateCourseProgress(courseId, lessonId, progress.progress).catch((error) => {
+      console.error('Failed to update progress:', error)
+    })
   }
 
   function isLessonCompleted(courseId: string, lessonId: string): boolean {
@@ -272,21 +299,3 @@ export const useCoursesStore = defineStore('courses', () => {
     generateCertificate,
   }
 })
-
-// Mock API function - replace with actual backend call
-async function mockFetchOrgCourses(organizationId: string) {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  // Import mock data based on org
-  const { mockCourses, mockUserProgress, mockNotes, mockCertificates } =
-    await import('@/data/mockData')
-
-  // In real implementation, backend would return only this org's data
-  // For now, filter mock data by organizationId
-  return {
-    courses: mockCourses.filter((c) => c.organizationId === organizationId),
-    userProgress: mockUserProgress,
-    notes: mockNotes,
-    certificates: mockCertificates,
-  }
-}

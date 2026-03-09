@@ -1,61 +1,13 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { api } from '@/services/api'
 import type { User, UserPreferences, LearningGoal } from '@/types/user'
 
 export const useUserStore = defineStore('user', () => {
-  // State
-  const currentUser = ref<User>({
-    id: 'user-1',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    avatar: 'https://images.unsplash.com/photo-1629507208649-70919ca33793?w=200',
-    bio: 'Passionate learner and technology enthusiast',
-    title: 'Full Stack Developer',
-    location: 'San Francisco, CA',
-    website: 'https://johndoe.dev',
-    socialLinks: {
-      twitter: 'johndoe',
-      linkedin: 'johndoe',
-      github: 'johndoe',
-    },
-    preferences: {
-      theme: 'light',
-      language: 'en',
-      emailNotifications: true,
-      pushNotifications: true,
-      courseUpdates: true,
-      weeklyDigest: true,
-      marketingEmails: false,
-      autoPlayVideos: true,
-      videoQuality: 'auto',
-    },
-    stats: {
-      coursesEnrolled: 5,
-      coursesCompleted: 2,
-      totalHoursLearned: 48,
-      certificatesEarned: 2,
-      currentStreak: 7,
-      longestStreak: 15,
-    },
-    createdAt: new Date('2024-01-15'),
-  })
-
-  const learningGoals = ref<LearningGoal[]>([
-    {
-      id: 'goal-1',
-      title: 'Complete Web Development Bootcamp',
-      targetDate: new Date('2024-06-30'),
-      progress: 45,
-      completed: false,
-    },
-    {
-      id: 'goal-2',
-      title: 'Master React & Vue.js',
-      targetDate: new Date('2024-08-15'),
-      progress: 30,
-      completed: false,
-    },
-  ])
+  // State - loaded from backend
+  const currentUser = ref<User | null>(null)
+  const learningGoals = ref<LearningGoal[]>([])
+  const isLoading = ref(false)
 
   // Getters
   const isAuthenticated = computed(() => !!currentUser.value)
@@ -69,21 +21,108 @@ export const useUserStore = defineStore('user', () => {
   })
 
   // Actions
-  function updateProfile(updates: Partial<User>) {
-    if (currentUser.value) {
-      currentUser.value = { ...currentUser.value, ...updates }
+  async function loadUserProfile() {
+    isLoading.value = true
+    try {
+      const data: any = await api.getCurrentUser()
+      currentUser.value = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        avatar: data.avatar || undefined,
+        bio: data.bio || '',
+        title: data.title || '',
+        location: data.location || '',
+        website: data.website || '',
+        socialLinks: data.social_links || {},
+        preferences: {
+          theme: data.preferences?.theme || 'light',
+          language: data.preferences?.language || 'en',
+          emailNotifications: data.preferences?.emailNotifications ?? true,
+          pushNotifications: data.preferences?.pushNotifications ?? true,
+          courseUpdates: data.preferences?.courseUpdates ?? true,
+          weeklyDigest: data.preferences?.weeklyDigest ?? true,
+          marketingEmails: data.preferences?.marketingEmails ?? false,
+          autoPlayVideos: data.preferences?.autoPlayVideos ?? true,
+          videoQuality: data.preferences?.videoQuality || 'auto',
+        },
+        stats: {
+          coursesEnrolled: data.stats?.coursesEnrolled || 0,
+          coursesCompleted: data.stats?.coursesCompleted || 0,
+          totalHoursLearned: data.stats?.totalHoursLearned || 0,
+          certificatesEarned: data.stats?.certificatesEarned || 0,
+          currentStreak: data.stats?.currentStreak || 0,
+          longestStreak: data.stats?.longestStreak || 0,
+        },
+        createdAt: new Date(data.created_at),
+      }
+    } catch (error) {
+      console.error('Failed to load user profile:', error)
+    } finally {
+      isLoading.value = false
     }
   }
 
-  function updatePreferences(updates: Partial<UserPreferences>) {
-    if (currentUser.value) {
-      currentUser.value.preferences = { ...currentUser.value.preferences, ...updates }
+  async function updateProfile(updates: Partial<User>) {
+    if (!currentUser.value) return
+
+    isLoading.value = true
+    try {
+      const data: any = await api.updateUserProfile({
+        name: updates.name,
+        avatar: updates.avatar,
+        bio: updates.bio,
+        title: updates.title,
+        location: updates.location,
+        website: updates.website,
+        social_links: updates.socialLinks,
+      })
+
+      // Update local state
+      currentUser.value = {
+        ...currentUser.value,
+        name: data.name,
+        email: data.email,
+        avatar: data.avatar || undefined,
+        bio: data.bio || '',
+        title: data.title || '',
+        location: data.location || '',
+        website: data.website || '',
+        socialLinks: data.social_links || {},
+      }
+    } catch (error) {
+      console.error('Failed to update profile:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function updatePreferences(updates: Partial<UserPreferences>) {
+    if (!currentUser.value) return
+
+    isLoading.value = true
+    try {
+      const response: any = await api.updateUserPreferences(updates)
+
+      // Update local state
+      currentUser.value.preferences = {
+        ...currentUser.value.preferences,
+        ...response.preferences,
+      }
+    } catch (error) {
+      console.error('Failed to update preferences:', error)
+      throw error
+    } finally {
+      isLoading.value = false
     }
   }
 
   function updateAvatar(avatarUrl: string) {
     if (currentUser.value) {
       currentUser.value.avatar = avatarUrl
+      // Call updateProfile to persist
+      updateProfile({ avatar: avatarUrl })
     }
   }
 
@@ -93,6 +132,8 @@ export const useUserStore = defineStore('user', () => {
       id: `goal-${Date.now()}`,
     }
     learningGoals.value.push(newGoal)
+
+    // TODO: Call backend API to persist goal
   }
 
   function updateLearningGoal(goalId: string, updates: Partial<LearningGoal>) {
@@ -102,6 +143,8 @@ export const useUserStore = defineStore('user', () => {
         ...learningGoals.value[index],
         ...updates,
       } as LearningGoal
+
+      // TODO: Call backend API to update goal
     }
   }
 
@@ -109,7 +152,14 @@ export const useUserStore = defineStore('user', () => {
     const index = learningGoals.value.findIndex((g) => g.id === goalId)
     if (index !== -1) {
       learningGoals.value.splice(index, 1)
+
+      // TODO: Call backend API to delete goal
     }
+  }
+
+  function clearUser() {
+    currentUser.value = null
+    learningGoals.value = []
   }
 
   return {
@@ -117,11 +167,14 @@ export const useUserStore = defineStore('user', () => {
     learningGoals,
     isAuthenticated,
     userInitials,
+    isLoading,
+    loadUserProfile,
     updateProfile,
     updatePreferences,
     updateAvatar,
     addLearningGoal,
     updateLearningGoal,
     deleteLearningGoal,
+    clearUser,
   }
 })

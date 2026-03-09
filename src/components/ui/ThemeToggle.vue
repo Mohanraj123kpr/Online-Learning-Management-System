@@ -5,12 +5,16 @@ import { useUserStore } from '@/stores/user'
 const userStore = useUserStore()
 
 const themeIcon = computed(() => {
-  const theme = userStore.currentUser.preferences.theme
+  const theme = userStore.currentUser?.preferences?.theme || 'light'
   return theme === 'dark'
     ? 'mdi-weather-night'
     : theme === 'light'
       ? 'mdi-weather-sunny'
       : 'mdi-theme-light-dark'
+})
+
+const currentTheme = computed(() => {
+  return userStore.currentUser?.preferences?.theme || 'light'
 })
 
 const themeOptions = [
@@ -20,14 +24,16 @@ const themeOptions = [
 ]
 
 function setTheme(theme: 'light' | 'dark' | 'system') {
-  userStore.updatePreferences({ theme })
+  if (userStore.currentUser) {
+    userStore.updatePreferences({ theme })
+  }
 }
 </script>
 
 <template>
   <v-menu>
     <template v-slot:activator="{ props }">
-      <v-btn :icon="themeIcon" variant="text" v-bind="props" />
+      <v-btn :icon="themeIcon" variant="text" size="small" v-bind="props" />
     </template>
     <v-list density="compact">
       <v-list-item
@@ -35,7 +41,7 @@ function setTheme(theme: 'light' | 'dark' | 'system') {
         :key="option.value"
         :prepend-icon="option.icon"
         :title="option.title"
-        :active="userStore.currentUser.preferences.theme === option.value"
+        :active="currentTheme === option.value"
         @click="setTheme(option.value as 'light' | 'dark' | 'system')"
       />
     </v-list>

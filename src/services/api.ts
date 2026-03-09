@@ -191,8 +191,25 @@ class ApiService {
     return this.handleResponse(response)
   }
 
-  async updateUserProfile(data: any) {
+  async updateUserProfile(data: {
+    name?: string
+    avatar?: string
+    bio?: string
+    title?: string
+    location?: string
+    website?: string
+    social_links?: any
+  }) {
     const response = await fetch(`${API_BASE}/users/me`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    })
+    return this.handleResponse(response)
+  }
+
+  async updateUserPreferences(data: any) {
+    const response = await fetch(`${API_BASE}/users/me/preferences`, {
       method: 'PUT',
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),

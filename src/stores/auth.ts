@@ -39,15 +39,17 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       // Call backend API
-      const response = await api.login(credentials.email, credentials.password)
+      const response: any = await api.login(credentials.email, credentials.password)
 
       // Set auth token
       authToken.value = response.token
       localStorage.setItem('auth_token', response.token)
 
-      // Set user in user store
-      userStore.currentUser = response.user
+      // Set authentication state
       isAuthenticated.value = true
+
+      // Load user profile
+      await userStore.loadUserProfile()
 
       // Set organization context if user belongs to one
       if (response.organization && response.membership) {
@@ -86,9 +88,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     // Clear user and org context
     orgStore.clearOrganization()
-
-    // Reset user to guest state
-    userStore.currentUser = null as any
+    userStore.clearUser()
   }
 
   async function restoreSession(): Promise<boolean> {
@@ -97,17 +97,16 @@ export const useAuthStore = defineStore('auth', () => {
 
     isLoading.value = true
     try {
-      // Validate token with backend
-      const response = await api.getCurrentUser()
-
       authToken.value = token
-      userStore.currentUser = response.user || response
       isAuthenticated.value = true
+
+      // Load user profile
+      await userStore.loadUserProfile()
 
       // Get organization details
       try {
-        const orgData = await api.getMyOrganization()
-        if (orgData) {
+        const orgData: any = await api.getMyOrganization()
+        if (orgData && userStore.currentUser) {
           orgStore.setOrganization(
             {
               id: orgData.id,
@@ -121,9 +120,9 @@ export const useAuthStore = defineStore('auth', () => {
             },
             {
               id: 'temp',
-              userId: response.user?.id || response.id,
+              userId: userStore.currentUser.id,
               organizationId: orgData.id,
-              role: response.user?.orgRole || response.orgRole || 'learner',
+              role: 'learner', // Will be updated from backend
               joinedAt: new Date(),
               active: true,
             },
@@ -137,13 +136,15 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err) {
       // Token invalid, clear it
       localStorage.removeItem('auth_token')
+      authToken.value = null
+      isAuthenticated.value = false
       return false
     } finally {
       isLoading.value = false
     }
   }
 
-  async function switchOrganization(orgId: string): Promise<boolean> {
+  async function switchOrganization(_orgId: string): Promise<boolean> {
     // For users who belong to multiple orgs
     isLoading.value = true
     try {
